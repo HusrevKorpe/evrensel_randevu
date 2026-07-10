@@ -40,18 +40,18 @@
 ## 🏠 Faz 2 — Vitrin (Anasayfa)
 **Amaç:** Mobil ve masaüstünde şık duran, gerçek verili landing page.
 
-- [ ] 🧑‍💻 Tasarım sistemi: renk/tipografi/boşluk kuralları
-- [ ] 🧑‍💻 Header + gezinme menüsü (mobil hamburger menü dahil)
-- [ ] 🧑‍💻 Hero bölümü — büyük başlık + "Randevu Al" butonu
-- [ ] 🧑‍💻 Hizmetler bölümü (DB'den çekilen, fiyatlı)
-- [ ] 🧑‍💻 Hakkında / "Neden biz" bölümü
-- [ ] 🧑‍💻 Galeri (fotoğraf ızgarası)
-- [ ] 🧑‍💻 Çalışma saatleri + konum (harita) + iletişim
-- [ ] 🧑‍💻 Footer + sosyal medya
-- [ ] 🧑‍💻 Tam responsive (telefon/tablet/masaüstü)
-- [ ] 🙋 Gerçek foto/logo/metin ver (yoksa geçici görsel kullanırım)
+- [x] 🧑‍💻 Tasarım sistemi: renk/tipografi/boşluk kuralları (`components/site/section.tsx` + `--brand` token'ları)
+- [x] 🧑‍💻 Header + gezinme menüsü (mobil hamburger menü dahil) — sticky, scroll'da belirginleşir
+- [x] 🧑‍💻 Hero bölümü — büyük başlık + "Randevu Al" butonu + güven istatistikleri
+- [x] 🧑‍💻 Hizmetler bölümü (DB'den çekilen, fiyatlı) — `services` tablosu, fiyat + süre
+- [x] 🧑‍💻 Hakkında / "Neden biz" bölümü — 4 değer kartı
+- [x] 🧑‍💻 Galeri (fotoğraf ızgarası) — şimdilik stilize placeholder karolar
+- [x] 🧑‍💻 Çalışma saatleri + konum (harita) + iletişim — DB'den saatler (bugün vurgulu) + Google Maps gömme
+- [x] 🧑‍💻 Footer + sosyal medya
+- [x] 🧑‍💻 Tam responsive (telefon/tablet/masaüstü)
+- [ ] 🙋 Gerçek foto/logo/metin ver (yoksa geçici görsel kullanırım) — şu an placeholder kullanılıyor
 
-**✅ Bitti sayılır:** Her ekranda şık görünen, gerçek içerikli anasayfa.
+**✅ Bitti sayılır:** Her ekranda şık görünen, gerçek içerikli anasayfa. → **TAMAM** (DB verisiyle canlı test edildi, build ✓)
 
 ---
 

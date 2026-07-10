@@ -1,27 +1,28 @@
 "use client";
 
-import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Tema (koyu/açık) değiştirme düğmesi.
+ *
+ * İki ikonu da render edip CSS'in `dark:` varyantıyla birini gösteriyoruz.
+ * Böylece sunucu ve istemci AYNI HTML'i üretir → hidrasyon uyumsuzluğu olmaz,
+ * ayrıca `mounted` state'ine / effect'e gerek kalmaz.
+ */
 export function ModeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  // Hidrasyon uyumsuzluğunu önlemek için client'ta mount olunca ikon göster
-  React.useEffect(() => setMounted(true), []);
-
-  const isDark = resolvedTheme === "dark";
 
   return (
     <Button
       variant="outline"
       size="icon"
       aria-label="Temayı değiştir"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {mounted && (isDark ? <Sun /> : <Moon />)}
+      <Sun className="hidden dark:block" />
+      <Moon className="block dark:hidden" />
     </Button>
   );
 }
