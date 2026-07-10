@@ -25,17 +25,15 @@
 ## 🗄️ Faz 1 — Veritabanı & Altyapı
 **Amaç:** Güvenli, örnek verisi dolu, koddan okunabilen bir veritabanı.
 
-- [ ] 🙋 supabase.com'da proje aç, API anahtarlarını bana ver (`.env.local`'a koyacağız)
-- [ ] 🧑‍💻 Şema SQL'ini yaz: `services`, `barbers`, `working_hours`, `time_off`, `appointments`
-- [ ] 🧑‍💻 İlişkiler + indexler + **çakışma engelleme kısıtı** (aynı saate 2 randevu olamaz)
-- [ ] 🧑‍💻 RLS (Row Level Security) politikaları:
-  - Hizmetler/berberler → herkes okuyabilir
-  - Randevular → herkes oluşturabilir, sadece admin görüp değiştirebilir
-- [ ] 🧑‍💻 Örnek veri (seed): hizmetler, çalışma saatleri, 1 berber
-- [ ] 🧑‍💻 Supabase client kurulumu (tarayıcı + sunucu tarafı)
-- [ ] 🧑‍💻 TypeScript tiplerini DB'den otomatik üret
+- [x] 🙋 supabase.com'da proje aç, API anahtarları verildi (`.env.local`'a kondu)
+- [x] 🧑‍💻 Şema SQL: `services`, `barbers`, `working_hours`, `time_off`, `appointments`
+- [x] 🧑‍💻 İlişkiler + indexler + **çakışma engelleme kısıtı** (exclusion constraint — aynı saate 2 randevu imkânsız)
+- [x] 🧑‍💻 RLS politikaları (herkes okur; ziyaretçi randevu oluşturur ama okuyamaz; admin yönetir) — canlı test edildi ✅
+- [x] 🧑‍💻 Örnek veri (6 hizmet + 2 berber + 12 çalışma saati satırı)
+- [x] 🧑‍💻 Supabase istemcileri (client / server / admin)
+- [x] 🧑‍💻 TypeScript tipleri (`types/index.ts` — şemayla birebir; ileride CLI ile otomatik üretime geçebiliriz)
 
-**✅ Bitti sayılır:** Tablolar + örnek veri hazır, kod DB'ye güvenli bağlanıyor.
+**✅ Bitti sayılır:** Tablolar + örnek veri hazır, kod DB'ye güvenli bağlanıyor. → **TAMAM** (canlı sorgu ile kanıtlandı)
 
 ---
 
