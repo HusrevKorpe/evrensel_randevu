@@ -9,11 +9,13 @@
  * Bu yüzden GİRDİYE ASLA GÜVENMEYİZ — her şeyi burada yeniden doğrularız.
  */
 
+import { after } from "next/server";
 import {
   getAvailableTimes,
   pickBarberForSlot,
   type BarberChoice,
 } from "@/lib/booking/availability";
+import { notifyCreated } from "@/lib/notifications/appointments";
 import { HORIZON_DAYS } from "@/lib/booking/config";
 import { addDaysISO, shopLocalToUtc, shopNow } from "@/lib/booking/time";
 import { validateContact, type ContactErrors } from "@/lib/booking/validate";
@@ -153,6 +155,10 @@ export async function createAppointmentAction(
       message: "Randevu oluşturulamadı. Lütfen tekrar dene.",
     };
   }
+
+  // Bildirimler yanıtı BEKLETMESİN: `after` müşteriye cevap gittikten sonra
+  // çalışır. E-posta hatası randevuyu etkilemez (içeride yakalanır).
+  after(() => notifyCreated(created.id as string));
 
   // Atanan berberin adını başarı ekranı için çekelim ("Farketmez"te önemli).
   const { data: barber } = await admin

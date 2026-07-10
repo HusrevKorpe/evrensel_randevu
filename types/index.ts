@@ -76,5 +76,7 @@ export interface Appointment {
   ends_at: Timestamp;
   status: AppointmentStatus;
   notes: string | null;
+  /** Hatırlatma e-postası gönderim zamanı; null = gönderilmedi (0002_reminders.sql). */
+  reminder_sent_at: Timestamp | null;
   created_at: Timestamp;
 }

@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { requireAdmin } from "@/lib/auth/dal";
+import { notifyStatusChange } from "@/lib/notifications/appointments";
 import { createClient } from "@/lib/supabase/server";
 import type { AppointmentStatus } from "@/types";
 
@@ -55,8 +57,15 @@ export async function updateAppointmentStatus(
     return { ok: false, error: "Güncellenemedi, tekrar deneyin." };
   }
 
-  // Değişiklik hem listede hem dashboard özetinde görünsün.
+  // Onay/iptalde müşteriye e-posta (yanıtı bekletmeden, `after` ile).
+  // Tamamlandı/gelmedi için e-posta atmayız — müşteri zaten dükkandaydı.
+  if (status === "confirmed" || status === "cancelled") {
+    after(() => notifyStatusChange(id, status));
+  }
+
+  // Değişiklik hem listede hem dashboard özetinde hem takvimde görünsün.
   revalidatePath("/admin/randevular");
   revalidatePath("/admin");
+  revalidatePath("/admin/takvim");
   return { ok: true };
 }

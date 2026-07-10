@@ -82,29 +82,32 @@
 - [x] 🧑‍💻 `/admin` route'unu koruma (giriş yoksa engelle) — **Parça A** (proxy + layout + DAL, 3 kat)
 - [x] 🧑‍💻 Dashboard: bugünün randevuları özeti — **Parça A**
 - [x] 🧑‍💻 Randevu listesi + filtre (tarih / durum) — **Parça B**
-- [ ] 🧑‍💻 Takvim görünümü (günlük/haftalık) — _(şimdilik gün-bazlı gezinmeli liste var; ızgara takvim sonraya)_
+- [x] 🧑‍💻 Takvim görünümü (günlük/haftalık) — `/admin/takvim`: haftalık ızgara + berber-sütunlu gün görünümü, durum renkleri, "şu an" çizgisi
 - [x] 🧑‍💻 Randevu işlemleri: onayla / iptal / tamamlandı (+ gelmedi / geri al) — **Parça B**
-- [ ] 🧑‍💻 Hizmet yönetimi (ekle / düzenle / sil) — **Parça C**
-- [ ] 🧑‍💻 Çalışma saati yönetimi — **Parça C**
-- [ ] 🧑‍💻 İzin / kapalı gün ekleme — **Parça C**
-- [ ] 🙋 Admin e-posta adresini belirle
+- [x] 🧑‍💻 Hizmet yönetimi (ekle / düzenle / sil + aktif-pasif + sıralama) — **Parça C**
+- [x] 🧑‍💻 Çalışma saati yönetimi (gün aç/kapa + saat + mola, berber bazlı) — **Parça C**
+- [x] 🧑‍💻 İzin / kapalı gün ekleme (berber veya tüm dükkan; çakışan randevu uyarısı) — **Parça C**
+- [ ] 🙋 Admin e-posta adresini belirle (Supabase > Authentication > Users'tan admin kullanıcıyı oluştur + signup'ı kapat)
 
 **✅ Bitti sayılır:** Berber giriş yapıp tüm randevu ve ayarları yönetebiliyor.
-**Durum:** Parça A (giriş + koruma + dashboard) ✓ · Parça B (randevu listesi + filtre + işlemler) ✓ · **Parça C** (ayarlar) sırada.
+**Durum:** Parça A ✓ · Parça B ✓ · Takvim ✓ · Parça C ✓ → **Kod tarafı TAMAM** (kalan tek iş 🙋 admin kullanıcısı).
 
 ---
 
 ## 🔔 Faz 5 — Bildirimler
 **Amaç:** Randevu alınca onay, öncesinde hatırlatma otomatik gitsin.
 
-- [ ] 🙋 resend.com hesabı aç + API anahtarı ver
-- [ ] 🧑‍💻 E-posta şablonları (onay / iptal / hatırlatma)
-- [ ] 🧑‍💻 Randevu oluşunca onay e-postası (müşteriye + berbere)
-- [ ] 🧑‍💻 Hatırlatma cron job'u (randevudan X saat önce otomatik)
+- [ ] 🙋 resend.com hesabı aç + API anahtarını `.env.local`'a koy (`RESEND_API_KEY`) — anahtar gelene kadar e-postalar sessizce atlanır, site normal çalışır
+- [ ] 🙋 `supabase/migrations/0002_reminders.sql` dosyasını Supabase SQL Editor'da çalıştır (hatırlatma takibi için `reminder_sent_at` kolonu)
+- [x] 🧑‍💻 E-posta şablonları (onay / iptal / hatırlatma + berbere yeni-randevu) — `lib/notifications/templates.ts`
+- [x] 🧑‍💻 Bildirim katmanı soyutlaması — `lib/notifications/` (Resend'e düz HTTP; ileride WhatsApp/SMS kanalı eklenebilir)
+- [x] 🧑‍💻 Randevu oluşunca onay e-postası (müşteriye + berbere) + admin onay/iptalinde müşteriye bilgi — `after()` ile, yanıtı bekletmez
+- [x] 🧑‍💻 Hatırlatma cron job'u — `GET /api/cron/reminders` (CRON_SECRET korumalı) + `vercel.json` (her gün 09:00 İstanbul; randevudan `REMINDER_HOURS_BEFORE=24` saat önce)
 - [ ] 🧑‍💻 _(Opsiyonel)_ SMS entegrasyonu
   - ⚠️ 🙋 Türkiye'de ticari SMS için İYS kaydı + paralı sağlayıcı (Netgsm vb.) gerekir
 
 **✅ Bitti sayılır:** Randevu alınca mail düşüyor, randevudan önce hatırlatma gidiyor.
+**Durum:** Kod tarafı TAMAM — çalışması için 2 🙋 adım kaldı: Resend anahtarı + 0002 migration. Deploy'da Vercel'e `CRON_SECRET` eklemeyi unutma.
 
 ---
 
