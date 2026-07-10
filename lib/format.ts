@@ -23,6 +23,27 @@ export function formatTime(t: string): string {
   return t.slice(0, 5);
 }
 
+/** UTC timestamp → dükkan yerel saati "14:30" (İstanbul, sabit UTC+3). */
+export function formatClock(iso: string): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
+}
+
+/** UTC timestamp → "Cuma, 10 Temmuz 2026" (dükkan yerel). */
+export function formatDateLong(iso: string): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(iso));
+}
+
 /** "+90 216 555 12 34" → "tel:+902165551234" */
 export function telHref(phone: string): string {
   return `tel:${phone.replace(/[^\d+]/g, "")}`;

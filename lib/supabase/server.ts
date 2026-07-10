@@ -25,7 +25,7 @@ export async function createClient() {
             );
           } catch {
             // Server Component içinden çağrıldıysa çerez yazılamaz;
-            // oturum yenilemeyi middleware halleder (Faz 4).
+            // oturum yenilemeyi proxy.ts (updateSession) halleder.
           }
         },
       },
