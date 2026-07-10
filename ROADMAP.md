@@ -87,18 +87,19 @@
 - [x] 🧑‍💻 Hizmet yönetimi (ekle / düzenle / sil + aktif-pasif + sıralama) — **Parça C**
 - [x] 🧑‍💻 Çalışma saati yönetimi (gün aç/kapa + saat + mola, berber bazlı) — **Parça C**
 - [x] 🧑‍💻 İzin / kapalı gün ekleme (berber veya tüm dükkan; çakışan randevu uyarısı) — **Parça C**
-- [ ] 🙋 Admin e-posta adresini belirle (Supabase > Authentication > Users'tan admin kullanıcıyı oluştur + signup'ı kapat)
+- [x] 🙋 Admin e-posta adresini belirle — admin kullanıcı oluşturuldu (husrevkorpe@gmail.com, onaylı)
 
-**✅ Bitti sayılır:** Berber giriş yapıp tüm randevu ve ayarları yönetebiliyor.
-**Durum:** Parça A ✓ · Parça B ✓ · Takvim ✓ · Parça C ✓ → **Kod tarafı TAMAM** (kalan tek iş 🙋 admin kullanıcısı).
+**✅ Bitti sayılır:** Berber giriş yapıp tüm randevu ve ayarları yönetebiliyor. → **TAMAM** 🎉
 
 ---
 
 ## 🔔 Faz 5 — Bildirimler
 **Amaç:** Randevu alınca onay, öncesinde hatırlatma otomatik gitsin.
 
-- [ ] 🙋 resend.com hesabı aç + API anahtarını `.env.local`'a koy (`RESEND_API_KEY`) — anahtar gelene kadar e-postalar sessizce atlanır, site normal çalışır
-- [ ] 🙋 `supabase/migrations/0002_reminders.sql` dosyasını Supabase SQL Editor'da çalıştır (hatırlatma takibi için `reminder_sent_at` kolonu)
+- [x] 🙋 resend.com hesabı aç + API anahtarını `.env.local`'a koy (`RESEND_API_KEY`) — kondu, gerçek gönderimle test edildi ✓
+- [x] 🙋 `supabase/migrations/0002_reminders.sql` dosyasını Supabase SQL Editor'da çalıştır — çalıştırıldı, kolon doğrulandı ✓
+- [ ] 🙋 _(Yayın öncesi)_ resend.com/domains'ten kendi alan adını doğrula + `RESEND_FROM_EMAIL`'i doldur
+  - ⚠️ Doğrulanana kadar Resend test modunda: e-postalar SADECE hesap sahibinin adresine (husrevkorpe@gmail.com) gidebilir, müşterilere gitmez
 - [x] 🧑‍💻 E-posta şablonları (onay / iptal / hatırlatma + berbere yeni-randevu) — `lib/notifications/templates.ts`
 - [x] 🧑‍💻 Bildirim katmanı soyutlaması — `lib/notifications/` (Resend'e düz HTTP; ileride WhatsApp/SMS kanalı eklenebilir)
 - [x] 🧑‍💻 Randevu oluşunca onay e-postası (müşteriye + berbere) + admin onay/iptalinde müşteriye bilgi — `after()` ile, yanıtı bekletmez
@@ -106,8 +107,8 @@
 - [ ] 🧑‍💻 _(Opsiyonel)_ SMS entegrasyonu
   - ⚠️ 🙋 Türkiye'de ticari SMS için İYS kaydı + paralı sağlayıcı (Netgsm vb.) gerekir
 
-**✅ Bitti sayılır:** Randevu alınca mail düşüyor, randevudan önce hatırlatma gidiyor.
-**Durum:** Kod tarafı TAMAM — çalışması için 2 🙋 adım kaldı: Resend anahtarı + 0002 migration. Deploy'da Vercel'e `CRON_SECRET` eklemeyi unutma.
+**✅ Bitti sayılır:** Randevu alınca mail düşüyor, randevudan önce hatırlatma gidiyor. → **TAMAM** 🎉 (canlı gönderim + çift-gönderim engeli + 401 koruması test edildi; SMS bilinçli olarak ertelendi)
+**Deploy notu (Faz 6):** Vercel ortam değişkenlerine `RESEND_API_KEY`, `ADMIN_EMAIL`, `CRON_SECRET`, `REMINDER_HOURS_BEFORE` eklenecek; alan adı alınınca Resend'te doğrulanıp `RESEND_FROM_EMAIL` doldurulacak.
 
 ---
 
