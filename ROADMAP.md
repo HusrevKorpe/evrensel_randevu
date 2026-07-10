@@ -10,15 +10,15 @@
 ## 🧱 Faz 0 — Kurulum & İskelet
 **Amaç:** `npm run dev` deyince açılan, stilize edilmiş boş bir Next.js projesi.
 
-- [ ] 🧑‍💻 Next.js 15 projesi oluştur (TypeScript + App Router + Tailwind + ESLint)
-- [ ] 🧑‍💻 Klasör yapısını kur (`app/`, `components/`, `lib/`, `types/`)
-- [ ] 🧑‍💻 shadcn/ui kur ve başlat (hazır component kütüphanesi)
-- [ ] 🧑‍💻 Tema: renk paleti + font + koyu tema (modern minimal)
-- [ ] 🧑‍💻 `.env.example` + ortam değişkeni yapısı
-- [ ] 🧑‍💻 Git repo başlat + `.gitignore` + ilk commit
+- [x] 🧑‍💻 Next.js 16 projesi oluştur (TypeScript + App Router + Tailwind v4 + ESLint)
+- [x] 🧑‍💻 Klasör yapısını kur (`app/`, `components/`, `lib/`, `types/`)
+- [x] 🧑‍💻 shadcn/ui kur ve başlat (base-nova) — `Button` + `lib/utils` geldi
+- [x] 🧑‍💻 Tema: imza altın vurgu (`--brand`) + Space Grotesk başlık fontu + `next-themes` koyu tema + tema düğmesi
+- [x] 🧑‍💻 `.env.example` + ortam değişkeni yapısı (Supabase/Resend için hazır)
+- [x] 🧑‍💻 Git repo (create-next-app başlattı) + `.gitignore` düzeni + Faz 0 commit
 - [ ] 🙋 GitHub'da boş repo aç (opsiyonel, sonra da olur)
 
-**✅ Bitti sayılır:** Tarayıcıda stilize, boş bir sayfa açılıyor.
+**✅ Bitti sayılır:** Tarayıcıda stilize, koyu temalı başlangıç sayfası açılıyor. → **TAMAM** (localhost:3000)
 
 ---
 
