@@ -22,6 +22,22 @@ export const STATUS_BADGE: Record<AppointmentStatus, string> = {
   no_show: "bg-destructive/15 text-destructive",
 };
 
+/**
+ * Takvim bloğu için Tailwind sınıfları (sol kenar çizgisi + yumuşak zemin).
+ * Rozet renkleriyle aynı aileden — panel genelinde tutarlı.
+ */
+export const STATUS_BLOCK: Record<AppointmentStatus, string> = {
+  pending:
+    "border-amber-500 bg-amber-500/15 text-amber-800 hover:bg-amber-500/25 dark:text-amber-300",
+  confirmed:
+    "border-emerald-500 bg-emerald-500/15 text-emerald-800 hover:bg-emerald-500/25 dark:text-emerald-300",
+  completed:
+    "border-sky-500 bg-sky-500/15 text-sky-800 hover:bg-sky-500/25 dark:text-sky-300",
+  cancelled: "border-border bg-muted text-muted-foreground hover:bg-muted/80",
+  no_show:
+    "border-destructive bg-destructive/15 text-destructive hover:bg-destructive/25",
+};
+
 /** Panelde gösterim/filtre sırası. */
 export const STATUS_ORDER: AppointmentStatus[] = [
   "pending",

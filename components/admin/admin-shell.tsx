@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  CalendarRange,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -33,6 +34,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Panel", icon: LayoutDashboard, exact: true },
   { href: "/admin/randevular", label: "Randevular", icon: CalendarDays },
+  { href: "/admin/takvim", label: "Takvim", icon: CalendarRange },
   { href: "/admin/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 

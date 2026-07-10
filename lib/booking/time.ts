@@ -72,6 +72,39 @@ export function shopNow(): { dateISO: string; minutes: number } {
   return { dateISO, minutes: hour * 60 + Number(get("minute")) };
 }
 
+/**
+ * Bir UTC anının dükkan yerelindeki günü ve gece yarısından geçen dakikası.
+ * Takvim ızgarasında randevu bloklarını konumlandırmak için kullanılır.
+ */
+export function shopDateTimeOf(iso: string): { dateISO: string; minutes: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SHOP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((p) => p.type === type)!.value;
+  let hour = Number(get("hour"));
+  if (hour === 24) hour = 0;
+  return {
+    dateISO: `${get("year")}-${get("month")}-${get("day")}`,
+    minutes: hour * 60 + Number(get("minute")),
+  };
+}
+
+/**
+ * Verilen tarihin içinde bulunduğu haftanın PAZARTESİ'sini döner.
+ * ("2026-07-10" Cuma → "2026-07-06" Pazartesi)
+ */
+export function mondayOf(dateISO: string): string {
+  const wd = weekdayOf(dateISO); // 0=Pazar..6=Cumartesi
+  const diff = wd === 0 ? -6 : 1 - wd;
+  return addDaysISO(dateISO, diff);
+}
+
 /** Randevu takviminde gösterilecek bir gün. */
 export type DayOption = {
   iso: string; // "2026-07-15"
