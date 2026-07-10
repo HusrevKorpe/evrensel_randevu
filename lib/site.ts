@@ -18,8 +18,9 @@ export const siteConfig = {
   instagramHandle: "@berber",
   // Dükkanın kuruluş yılı (metinlerde kullanılır)
   foundedYear: 2009,
-  // Site kök adresi (deploy sonrası güncellenecek)
-  url: "https://berber.example.com",
+  // Site kök adresi — ortam değişkeninden gelir (Vercel'de canlı URL,
+  // lokalde localhost). SEO/OG/sitemap hep bunu kullanır.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

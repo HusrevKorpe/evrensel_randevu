@@ -10,7 +10,15 @@ export const metadata: Metadata = {
   title: "Randevu Al",
   description:
     "Online randevunu saniyeler içinde al: hizmetini, ustanı ve uygun saatini seç.",
+  alternates: { canonical: "/randevu" },
 };
+
+/**
+ * Bu sayfa her istekte taze render edilmeli: takvim günleri "bugün"e göre
+ * sunucuda üretiliyor. (Veri katmanı artık çerezsiz olduğundan Next bunu
+ * statik sanabilirdi — o zaman gün listesi bayatlardı.)
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * Randevu sayfası — Faz 3.

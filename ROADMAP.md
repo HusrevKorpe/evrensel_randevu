@@ -115,13 +115,13 @@
 ## ✨ Faz 6 — Cila & Yayın
 **Amaç:** Hızlı, cilalı, gerçek kullanıcıya hazır canlı site.
 
-- [ ] 🧑‍💻 SEO: sayfa başlıkları, Open Graph, sitemap, favicon
-- [ ] 🧑‍💻 Yükleniyor / hata / boş durum ekranları
-- [ ] 🧑‍💻 Erişilebilirlik (a11y) kontrolü
-- [ ] 🧑‍💻 Performans (Lighthouse) iyileştirmesi
-- [ ] 🧑‍💻 Vercel'e deploy + ortam değişkenleri
-- [ ] 🧑‍💻 Supabase production ayarları
-- [ ] 🙋 _(Opsiyonel)_ Alan adı (domain) al → bağla
+- [x] 🧑‍💻 SEO: sayfa başlıkları, Open Graph görseli, sitemap, robots.txt, favicon/ikonlar, manifest, canonical, JSON-LD (BarberShop şeması)
+- [x] 🧑‍💻 Yükleniyor / hata / boş durum ekranları — `loading` (site+panel), `error`, `global-error`, `not-found`; boş durumlar Faz 2-4'te zaten vardı
+- [x] 🧑‍💻 Erişilebilirlik (a11y) kontrolü — label/aria-invalid/aria-live/alt'lar yerinde; yükleme ekranlarına `role="status"` eklendi
+- [x] 🧑‍💻 Performans — anasayfa artık STATİK + 5 dk ISR (çerezsiz `lib/supabase/public.ts` istemcisi); hero `priority`; kullanılmayan boilerplate silindi
+- [ ] 🧑‍💻 Vercel'e deploy + ortam değişkenleri — 🙋 önce `npx vercel login` gerekiyor (interaktif)
+- [ ] 🙋 **Supabase production ayarları — KRİTİK:** Dashboard → Authentication → Sign In / Providers → **"Allow new users to sign up" KAPAT** (açık kalırsa herkes kayıt olup admin yetkisi alır çünkü RLS "giriş yapmış = admin" sayıyor!)
+- [ ] 🙋 _(Opsiyonel)_ Alan adı (domain) al → bağla → Resend'te domain doğrula + `RESEND_FROM_EMAIL` doldur
 
 **✅ Bitti sayılır:** Site canlıda, hızlı ve gerçek müşteriye hazır. 🚀
 

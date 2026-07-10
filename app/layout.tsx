@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/lib/site";
@@ -32,7 +32,13 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     type: "website",
     locale: "tr_TR",
+    siteName: siteConfig.name,
   },
+};
+
+// Mobil tarayıcının adres çubuğu rengi — koyu temayla uyumlu.
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({

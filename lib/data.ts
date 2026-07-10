@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { WEEK_ORDER, WEEKDAY_LABELS, formatTime } from "@/lib/format";
 import type { Barber, Service } from "@/types";
 
@@ -7,6 +7,8 @@ import type { Barber, Service } from "@/types";
  * Bu dosya sadece SUNUCU tarafında çalışır (`server-only`).
  * Vitrinin ihtiyaç duyduğu herkese açık verileri Supabase'den çeker.
  * RLS'de bu tablolar "public read" olduğundan anon istemci yeterlidir.
+ * ÇEREZSİZ public istemci kullanır → çağıran sayfa statik üretilebilir;
+ * admin bir şey değiştirince ilgili action `revalidatePath` ile tazeler.
  *
  * Not: Her fonksiyon hata durumunda BOŞ dizi döner — DB'ye ulaşılamasa
  * bile sayfa çökmez, sadece ilgili bölüm boş görünür.
@@ -14,7 +16,7 @@ import type { Barber, Service } from "@/types";
 
 /** Aktif hizmetler, sıra numarasına göre. */
 export async function getServices(): Promise<Service[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("services")
     .select("*")
@@ -30,7 +32,7 @@ export async function getServices(): Promise<Service[]> {
 
 /** Aktif berberler/personel, sıra numarasına göre. */
 export async function getBarbers(): Promise<Barber[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("barbers")
     .select("*")
@@ -50,7 +52,7 @@ export async function getBarbers(): Promise<Barber[]> {
  * (böylece her gün için ayrı sorgu atmadan kapalı günü peşinen eleriz).
  */
 export async function getBarberWeekdays(): Promise<Record<string, number[]>> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("working_hours")
     .select("barber_id, weekday");
@@ -60,8 +62,9 @@ export async function getBarberWeekdays(): Promise<Record<string, number[]>> {
     return {};
   }
 
+  const rows = (data ?? []) as { barber_id: string; weekday: number }[];
   const map: Record<string, number[]> = {};
-  for (const row of data ?? []) {
+  for (const row of rows) {
     (map[row.barber_id] ??= []).push(row.weekday);
   }
   return map;
@@ -83,7 +86,7 @@ export type ShopDay = {
  * en erken açılış → en geç kapanış. Hiç satır yoksa o gün kapalı.
  */
 export async function getShopHours(): Promise<ShopDay[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("working_hours")
     .select("weekday, start_time, end_time");
