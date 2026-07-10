@@ -44,6 +44,29 @@ export async function getBarbers(): Promise<Barber[]> {
   return (data ?? []) as Barber[];
 }
 
+/**
+ * Her berberin AÇIK olduğu haftagünleri: { berberId: [1,2,3,...] }.
+ * Randevu sihirbazının tarih adımında kapalı günleri kilitlemek için kullanılır
+ * (böylece her gün için ayrı sorgu atmadan kapalı günü peşinen eleriz).
+ */
+export async function getBarberWeekdays(): Promise<Record<string, number[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("working_hours")
+    .select("barber_id, weekday");
+
+  if (error) {
+    console.error("getBarberWeekdays:", error.message);
+    return {};
+  }
+
+  const map: Record<string, number[]> = {};
+  for (const row of data ?? []) {
+    (map[row.barber_id] ??= []).push(row.weekday);
+  }
+  return map;
+}
+
 /** Dükkanın bir günkü açık/kapalı durumu ve saat aralığı. */
 export type ShopDay = {
   weekday: number;

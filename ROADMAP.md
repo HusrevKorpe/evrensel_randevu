@@ -58,20 +58,20 @@
 ## 📅 Faz 3 — Randevu Akışı (projenin kalbi)
 **Amaç:** Uçtan uca çalışan, çakışmayı engelleyen online randevu.
 
-- [ ] 🧑‍💻 Adım adım randevu sihirbazı:
+- [x] 🧑‍💻 Adım adım randevu sihirbazı:
   - Adım 1: Hizmet seç (süre + fiyat görünür)
   - Adım 2: Berber seç (veya "farketmez")
   - Adım 3: Tarih seç (takvim)
   - Adım 4: Uygun saati seç
   - Adım 5: Ad + telefon + e-posta + not
   - Adım 6: Özet + onay
-- [ ] 🧑‍💻 **Boş slot hesaplama motoru** (çalışma saati − dolu randevu − izin)
-- [ ] 🧑‍💻 Çakışma önleme (sunucuda transaction + DB kısıtı)
-- [ ] 🧑‍💻 Randevu oluşturma (server action)
-- [ ] 🧑‍💻 Başarı ekranı + randevu referans numarası
-- [ ] 🧑‍💻 Form doğrulama (geçersiz telefon/tarih vs.)
+- [x] 🧑‍💻 **Boş slot hesaplama motoru** (çalışma saati − dolu randevu − izin − mola − geçmiş) — canlı test edildi ✅
+- [x] 🧑‍💻 Çakışma önleme (DB exclusion kısıtı `23P01`; sunucuda yeniden doğrulama) — canlı test edildi ✅
+- [x] 🧑‍💻 Randevu oluşturma (server action, admin istemci)
+- [x] 🧑‍💻 Başarı ekranı + randevu referans numarası (UUID ilk 8 hane)
+- [x] 🧑‍💻 Form doğrulama (TR telefon normalleştirme + e-posta; istemci & sunucu)
 
-**✅ Bitti sayılır:** Müşteri gerçek randevu oluşturuyor, dolu saat kapanıyor, çift randevu engelleniyor.
+**✅ Bitti sayılır:** Müşteri gerçek randevu oluşturuyor, dolu saat kapanıyor, çift randevu engelleniyor. → **TAMAM** (slot motoru + çakışma DB'ye karşı doğrulandı, build ✓)
 
 ---
 
