@@ -45,7 +45,7 @@
 - [x] 🧑‍💻 Hero bölümü — büyük başlık + "Randevu Al" butonu + güven istatistikleri
 - [x] 🧑‍💻 Hizmetler bölümü (DB'den çekilen, fiyatlı) — `services` tablosu, fiyat + süre
 - [x] 🧑‍💻 Hakkında / "Neden biz" bölümü — 4 değer kartı
-- [x] 🧑‍💻 Galeri (fotoğraf ızgarası) — şimdilik stilize placeholder karolar
+- [x] 🧑‍💻 Galeri (fotoğraf ızgarası) — gerçek fotoğraflar (Unsplash stok, ücretsiz) + hero arka planı
 - [x] 🧑‍💻 Çalışma saatleri + konum (harita) + iletişim — DB'den saatler (bugün vurgulu) + Google Maps gömme
 - [x] 🧑‍💻 Footer + sosyal medya
 - [x] 🧑‍💻 Tam responsive (telefon/tablet/masaüstü)
@@ -78,18 +78,19 @@
 ## 🔐 Faz 4 — Admin Panel
 **Amaç:** Berberin randevuları ve ayarları yönettiği korumalı panel.
 
-- [ ] 🧑‍💻 Berber girişi (Supabase Auth — e-posta ile)
-- [ ] 🧑‍💻 `/admin` route'unu koruma (giriş yoksa engelle)
-- [ ] 🧑‍💻 Dashboard: bugünün randevuları özeti
-- [ ] 🧑‍💻 Randevu listesi + filtre (tarih / durum)
-- [ ] 🧑‍💻 Takvim görünümü (günlük/haftalık)
-- [ ] 🧑‍💻 Randevu işlemleri: onayla / iptal / tamamlandı
-- [ ] 🧑‍💻 Hizmet yönetimi (ekle / düzenle / sil)
-- [ ] 🧑‍💻 Çalışma saati yönetimi
-- [ ] 🧑‍💻 İzin / kapalı gün ekleme
+- [x] 🧑‍💻 Berber girişi (Supabase Auth — e-posta ile) — **Parça A**
+- [x] 🧑‍💻 `/admin` route'unu koruma (giriş yoksa engelle) — **Parça A** (proxy + layout + DAL, 3 kat)
+- [x] 🧑‍💻 Dashboard: bugünün randevuları özeti — **Parça A**
+- [x] 🧑‍💻 Randevu listesi + filtre (tarih / durum) — **Parça B**
+- [ ] 🧑‍💻 Takvim görünümü (günlük/haftalık) — _(şimdilik gün-bazlı gezinmeli liste var; ızgara takvim sonraya)_
+- [x] 🧑‍💻 Randevu işlemleri: onayla / iptal / tamamlandı (+ gelmedi / geri al) — **Parça B**
+- [ ] 🧑‍💻 Hizmet yönetimi (ekle / düzenle / sil) — **Parça C**
+- [ ] 🧑‍💻 Çalışma saati yönetimi — **Parça C**
+- [ ] 🧑‍💻 İzin / kapalı gün ekleme — **Parça C**
 - [ ] 🙋 Admin e-posta adresini belirle
 
 **✅ Bitti sayılır:** Berber giriş yapıp tüm randevu ve ayarları yönetebiliyor.
+**Durum:** Parça A (giriş + koruma + dashboard) ✓ · Parça B (randevu listesi + filtre + işlemler) ✓ · **Parça C** (ayarlar) sırada.
 
 ---
 
