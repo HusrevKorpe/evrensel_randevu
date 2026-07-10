@@ -1,19 +1,21 @@
-import { Camera, Scissors, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { Section, SectionHeading } from "@/components/site/section";
-import { cn } from "@/lib/utils";
 
 /**
- * Galeri — şimdilik stilize placeholder karolar.
- * 🙋 Gerçek fotoğraflar gelince her karonun içine bir görsel (next/image)
- * koyacağız. Karolar bilinçli olarak marka renginde soyut desenler.
+ * Galeri — gerçek fotoğraflar (`public/gallery/`).
+ * 🙋 Kendi dükkan fotoğraflarını verince bu dosyaları değiştirmen yeterli;
+ * dosya adları/sıra aynı kalırsa kodu değiştirmene gerek yok.
+ *
+ * next/image `fill` ile karonun tamamını kaplar (object-cover) → otomatik
+ * boyutlandırma, WebP ve tembel yükleme (performans) bedavaya gelir.
  */
-const TILES = [
-  { icon: Scissors, grad: "from-brand/25 via-transparent to-transparent" },
-  { icon: Camera, grad: "from-transparent via-brand/15 to-transparent" },
-  { icon: Sparkles, grad: "from-transparent to-brand/20" },
-  { icon: Camera, grad: "from-brand/20 to-transparent" },
-  { icon: Scissors, grad: "from-transparent via-brand/10 to-brand/25" },
-  { icon: Sparkles, grad: "from-brand/15 to-transparent" },
+const PHOTOS = [
+  { src: "/gallery/gallery-1.jpg", alt: "Modern fade saç kesimi" },
+  { src: "/gallery/gallery-2.jpg", alt: "Saç şekillendirme" },
+  { src: "/gallery/gallery-3.jpg", alt: "Berber dükkanı" },
+  { src: "/gallery/gallery-4.jpg", alt: "Berber dükkanı iç mekan" },
+  { src: "/gallery/gallery-5.jpg", alt: "Ustura ile sakal kesimi" },
+  { src: "/gallery/gallery-6.jpg", alt: "Berber koltukları" },
 ];
 
 export function GallerySection() {
@@ -26,20 +28,18 @@ export function GallerySection() {
       />
 
       <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        {TILES.map((tile, i) => (
+        {PHOTOS.map((photo) => (
           <div
-            key={i}
-            className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-card"
+            key={photo.src}
+            className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted"
           >
-            <div
-              className={cn(
-                "absolute inset-0 bg-gradient-to-br transition-transform duration-500 group-hover:scale-105",
-                tile.grad,
-              )}
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              fill
+              sizes="(min-width: 640px) 33vw, 50vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 grid place-items-center">
-              <tile.icon className="size-8 text-foreground/15 transition-colors group-hover:text-foreground/25" />
-            </div>
           </div>
         ))}
       </div>

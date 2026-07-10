@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { BookButton } from "@/components/site/book-button";
@@ -15,11 +16,25 @@ const STATS = [
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden">
-      {/* Üstten inen yumuşak altın parıltı */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-10%,color-mix(in_oklch,var(--brand)_18%,transparent),transparent)]" />
+      {/* Arka plan fotoğrafı (public/hero.jpg) — priority: sayfanın ilk görseli */}
+      <div className="absolute inset-0 -z-20">
+        <Image
+          src="/hero.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
+      {/* Karartma katmanı — fotoğrafın üstündeki yazı her temada okunsun.
+          Alta doğru tam arka plana geçer → bir sonraki bölüme pürüzsüz akış. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/80 via-background/85 to-background" />
+      {/* İmza altın parıltı */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-10%,color-mix(in_oklch,var(--brand)_16%,transparent),transparent)]" />
 
-      <div className="mx-auto w-full max-w-3xl px-6 py-20 text-center sm:py-28">
-        <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+      <div className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:py-32">
+        <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
           <Star className="size-3.5 fill-brand text-brand" />
           {siteConfig.slogan}
         </span>
@@ -39,7 +54,7 @@ export function Hero() {
             href="#hizmetler"
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "h-12 px-6 text-base",
+              "h-12 bg-background/60 px-6 text-base backdrop-blur",
             )}
           >
             Hizmetleri Gör
