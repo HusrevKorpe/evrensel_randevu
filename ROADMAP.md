@@ -120,11 +120,12 @@
 - [x] 🧑‍💻 Yükleniyor / hata / boş durum ekranları — `loading` (site+panel), `error`, `global-error`, `not-found`; boş durumlar Faz 2-4'te zaten vardı
 - [x] 🧑‍💻 Erişilebilirlik (a11y) kontrolü — label/aria-invalid/aria-live/alt'lar yerinde; yükleme ekranlarına `role="status"` eklendi
 - [x] 🧑‍💻 Performans — anasayfa artık STATİK + 5 dk ISR (çerezsiz `lib/supabase/public.ts` istemcisi); hero `priority`; kullanılmayan boilerplate silindi
-- [ ] 🧑‍💻 Vercel'e deploy + ortam değişkenleri — 🙋 önce `npx vercel login` gerekiyor (interaktif)
-- [ ] 🙋 **Supabase production ayarları — KRİTİK:** Dashboard → Authentication → Sign In / Providers → **"Allow new users to sign up" KAPAT** (açık kalırsa herkes kayıt olup admin yetkisi alır çünkü RLS "giriş yapmış = admin" sayıyor!)
-- [ ] 🙋 _(Opsiyonel)_ Alan adı (domain) al → bağla → Resend'te domain doğrula + `RESEND_FROM_EMAIL` doldur
+- [x] 🧑‍💻 Vercel'e deploy + ortam değişkenleri — CANLI: **https://berberweb.vercel.app** (2026-07-11, d1091af). `NEXT_PUBLIC_SITE_URL` düzeltildi (alt çizgili yanlış değer → `https://berberweb.vercel.app`), kalkan `REMINDER_HOURS_BEFORE` env'den silindi. Doğrulandı: anasayfa/admin/onay sayfası 200, robots+sitemap doğru URL, cron secretsiz 401, cron kaydı aktif (09:00 TR), loglar temiz ✓
+- [x] 🙋 **Supabase production ayarları — KRİTİK:** signup KAPALI (auth ayarı API'den doğrulandı: `disable_signup: true` ✓)
+- [ ] 🙋 _(Opsiyonel)_ Alan adı (domain) al → bağla → Resend'te domain doğrula + `RESEND_FROM_EMAIL` doldur → `NEXT_PUBLIC_SITE_URL`'i yeni domain yap
+  - ⚠️ Domain doğrulanana dek Resend test modunda: mailler sadece husrevkorpe@gmail.com'a gider (şu an tek berber adresi de bu olduğu için akış çalışıyor)
 
-**✅ Bitti sayılır:** Site canlıda, hızlı ve gerçek müşteriye hazır. 🚀
+**✅ Bitti sayılır:** Site canlıda, hızlı ve gerçek müşteriye hazır. 🚀 → **TAMAM** 🎉 (domain isteğe bağlı, sonraya)
 
 ---
 
