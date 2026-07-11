@@ -5,7 +5,7 @@
  * 🙋 Buradaki bilgiler örnek/placeholder — gerçek dükkan bilgilerinle değiştir.
  */
 export const siteConfig = {
-  name: "BERBER",
+  name: "Evrensel Kuaför",
   slogan: "Modern Erkek Kuaförü",
   description:
     "Online randevunu saniyeler içinde al, sıra bekleme. Saç, sakal ve bakımda mahallenin güvenilir adresi.",

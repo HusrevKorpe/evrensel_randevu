@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Scissors } from "lucide-react";
 import { InstagramIcon } from "@/components/site/instagram-icon";
 import { telHref } from "@/lib/format";
 import { siteConfig } from "@/lib/site";
@@ -23,9 +23,13 @@ export function SiteFooter() {
           {/* Marka */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2">
-              <span className="grid size-9 place-items-center rounded-xl bg-brand text-brand-foreground">
-                <Scissors className="size-5" />
-              </span>
+              <Image
+                src="/logo.png"
+                alt={`${siteConfig.name} logosu`}
+                width={40}
+                height={40}
+                className="size-10 rounded-full"
+              />
               <span className="font-heading text-lg font-bold tracking-tight">
                 {siteConfig.name}
               </span>
