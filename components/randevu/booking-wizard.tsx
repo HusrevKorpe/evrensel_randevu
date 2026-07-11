@@ -430,7 +430,7 @@ function Footer({
           ) : step === 5 ? (
             "Devam"
           ) : (
-            "Randevuyu Onayla"
+            "Talebi Gönder"
           )}
         </Button>
       ) : (
