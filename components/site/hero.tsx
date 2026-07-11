@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 const STATS = [
   { value: "15+", label: "Yıllık tecrübe" },
   { value: "5.000+", label: "Mutlu müşteri" },
-  { value: "4.9", label: "Ortalama puan" },
 ];
 
 export function Hero() {
@@ -62,7 +61,7 @@ export function Hero() {
         </div>
 
         {/* İstatistik şeridi */}
-        <div className="mx-auto mt-16 grid max-w-lg grid-cols-3 gap-6 border-t border-border/60 pt-8">
+        <div className="mx-auto mt-16 grid max-w-lg grid-cols-2 gap-6 border-t border-border/60 pt-8">
           {STATS.map((s) => (
             <div key={s.label}>
               <div className="font-heading text-2xl font-bold sm:text-3xl">

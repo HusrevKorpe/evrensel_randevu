@@ -1,8 +1,6 @@
 /**
  * Sitenin merkezi ayarları — dükkan bilgilerini TEK yerden değiştir.
  * (İsim, iletişim, sosyal medya vs. buradan yönetilir.)
- *
- * 🙋 Buradaki bilgiler örnek/placeholder — gerçek dükkan bilgilerinle değiştir.
  */
 export const siteConfig = {
   name: "Evrensel Kuaför",
@@ -10,12 +8,12 @@ export const siteConfig = {
   description:
     "Online randevunu saniyeler içinde al, sıra bekleme. Saç, sakal ve bakımda mahallenin güvenilir adresi.",
   // İletişim
-  phone: "+90 216 555 12 34",
+  phone: "0507 121 36 55",
   email: "randevu@berber.com",
-  address: "Bağdat Cad. No:120, Kadıköy / İstanbul",
+  address: "Kutlubey Mah. 1006. Sk. Eski Adliye Karşısı, Isparta",
   // Sosyal medya
-  instagram: "https://instagram.com/",
-  instagramHandle: "@berber",
+  instagram: "https://instagram.com/evrenselkuafor",
+  instagramHandle: "@evrenselkuafor",
   // Dükkanın kuruluş yılı (metinlerde kullanılır)
   foundedYear: 2009,
   // Site kök adresi — ortam değişkeninden gelir (Vercel'de canlı URL,
