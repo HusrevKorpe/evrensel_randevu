@@ -74,5 +74,6 @@ export async function respondToAppointment(
   revalidatePath("/admin/randevular");
   revalidatePath("/admin");
   revalidatePath("/admin/takvim");
+  revalidatePath("/admin/gecmis");
   return { ok: true, status };
 }

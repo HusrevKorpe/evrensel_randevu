@@ -63,9 +63,10 @@ export async function updateAppointmentStatus(
     after(() => notifyCancelled(id));
   }
 
-  // Değişiklik hem listede hem dashboard özetinde hem takvimde görünsün.
+  // Değişiklik listede, dashboard özetinde, takvimde ve geçmişte görünsün.
   revalidatePath("/admin/randevular");
   revalidatePath("/admin");
   revalidatePath("/admin/takvim");
+  revalidatePath("/admin/gecmis");
   return { ok: true };
 }

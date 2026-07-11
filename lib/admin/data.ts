@@ -45,6 +45,27 @@ function nameOf(rel: Row["service"]): string {
   return Array.isArray(rel) ? (rel[0]?.name ?? "—") : rel.name;
 }
 
+/** Randevu sorgularının ortak select'i (hizmet + berber adı gömülü). */
+const APPOINTMENT_SELECT =
+  "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(name)";
+
+/** Ham satırı panel randevusuna çevirir (gömülü ilişkileri düzleştirir). */
+function toAdminAppointment(r: Row): AdminAppointment {
+  return {
+    id: r.id,
+    barber_id: r.barber_id,
+    starts_at: r.starts_at,
+    ends_at: r.ends_at,
+    status: r.status,
+    customer_name: r.customer_name,
+    customer_phone: r.customer_phone,
+    customer_email: r.customer_email,
+    notes: r.notes,
+    service_name: nameOf(r.service),
+    barber_name: nameOf(r.barber),
+  };
+}
+
 /**
  * Başlangıcı [startUtcISO, endUtcISO) aralığında olan randevular, saate göre sıralı.
  * `statuses` verilirse yalnızca o durumlar; verilmezse (iptaller dahil) hepsi.
@@ -57,9 +78,7 @@ export async function getAppointmentsInRange(
   const supabase = await createClient();
   let query = supabase
     .from("appointments")
-    .select(
-      "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(name)",
-    )
+    .select(APPOINTMENT_SELECT)
     .gte("starts_at", startUtcISO)
     .lt("starts_at", endUtcISO)
     .order("starts_at", { ascending: true });
@@ -72,19 +91,59 @@ export async function getAppointmentsInRange(
     return [];
   }
 
-  return ((data ?? []) as Row[]).map((r) => ({
-    id: r.id,
-    barber_id: r.barber_id,
-    starts_at: r.starts_at,
-    ends_at: r.ends_at,
-    status: r.status,
-    customer_name: r.customer_name,
-    customer_phone: r.customer_phone,
-    customer_email: r.customer_email,
-    notes: r.notes,
-    service_name: nameOf(r.service),
-    barber_name: nameOf(r.barber),
-  }));
+  return ((data ?? []) as Row[]).map(toAdminAppointment);
+}
+
+/**
+ * GEÇMİŞ randevular: başlangıcı şu andan önce olan TÜM kayıtlar (iptal ve
+ * gelmeyenler dahil), en yeniden eskiye, sayfalı.
+ *
+ * Sayfa numarası [1, sonSayfa] aralığına sabitlenir; bu yüzden dönen `page`
+ * istenen değerden farklı olabilir (örn. elle ?page=999 yazıldıysa).
+ * Sabitleme için önce toplam sayı çekilir — aralık toplamı aşarsa PostgREST
+ * hata döndürdüğünden bu ayrıca bizi o hatadan da korur.
+ */
+export async function getPastAppointments(
+  page: number,
+  pageSize: number,
+): Promise<{ items: AdminAppointment[]; total: number; page: number }> {
+  const supabase = await createClient();
+  const nowISO = new Date().toISOString();
+
+  const { count, error: countError } = await supabase
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .lt("starts_at", nowISO);
+
+  if (countError) {
+    console.error("getPastAppointments count:", countError.message);
+    return { items: [], total: 0, page: 1 };
+  }
+
+  const total = count ?? 0;
+  if (total === 0) return { items: [], total: 0, page: 1 };
+
+  const lastPage = Math.ceil(total / pageSize);
+  const safePage = Math.min(Math.max(1, page), lastPage);
+  const from = (safePage - 1) * pageSize;
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(APPOINTMENT_SELECT)
+    .lt("starts_at", nowISO)
+    .order("starts_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+
+  if (error) {
+    console.error("getPastAppointments:", error.message);
+    return { items: [], total, page: safePage };
+  }
+
+  return {
+    items: ((data ?? []) as Row[]).map(toAdminAppointment),
+    total,
+    page: safePage,
+  };
 }
 
 /**

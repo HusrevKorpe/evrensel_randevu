@@ -15,8 +15,9 @@ import type { AppointmentStatus } from "@/types";
 /**
  * RANDEVU BİLDİRİM ORKESTRASYONU (Faz 7 düzeni).
  *
- * Akış: yeni randevu → ATANAN BERBERE onay/red maili (+ sahibine kopya);
+ * Akış: yeni randevu → SADECE atanan berbere onay/red maili;
  * iptal/red → müşteriye iptal maili (e-postası varsa). Başka mail yok.
+ * Sahip tüm randevuları panelden izler (Randevular + Geçmiş sayfaları).
  *
  * Buradaki fonksiyonlar `after()` içinden (yanıtı bloklamadan) ve cron'dan
  * çağrılır — o bağlamlarda oturum çerezi olmadığı için ADMIN istemci kullanılır
@@ -81,9 +82,9 @@ export async function fetchAppointment(
 }
 
 /**
- * Yeni randevu: ATANAN BERBERE onay/red maili. Berberin e-postası yoksa
- * mail sahibine (ADMIN_EMAIL) düşer; varsa sahibine ayrıca kopya gider —
- * böylece dükkan sahibi her talepten haberdar olur.
+ * Yeni randevu: SADECE atanan berbere onay/red maili — diğer ustalar ve
+ * sahip mail almaz. Berberin e-postası tanımlı değilse mail kaybolmasın
+ * diye sahibine (ADMIN_EMAIL) düşer.
  */
 export async function notifyCreated(appointmentId: string): Promise<void> {
   try {
@@ -92,13 +93,7 @@ export async function notifyCreated(appointmentId: string): Promise<void> {
 
     const links = buildApprovalLinks(appointmentId, appt.startsAtISO);
     const content = newBookingBarberEmail(appt, links);
-
-    const to = appt.barberEmail || adminEmail();
-    const jobs: Promise<unknown>[] = [sendEmail({ to, ...content })];
-    if (to !== adminEmail()) {
-      jobs.push(sendEmail({ to: adminEmail(), ...content }));
-    }
-    await Promise.all(jobs);
+    await sendEmail({ to: appt.barberEmail || adminEmail(), ...content });
   } catch (err) {
     console.error("notifyCreated:", err);
   }

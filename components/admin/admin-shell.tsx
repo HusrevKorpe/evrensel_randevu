@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   CalendarRange,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -35,6 +36,7 @@ const NAV: NavItem[] = [
   { href: "/admin", label: "Panel", icon: LayoutDashboard, exact: true },
   { href: "/admin/randevular", label: "Randevular", icon: CalendarDays },
   { href: "/admin/takvim", label: "Takvim", icon: CalendarRange },
+  { href: "/admin/gecmis", label: "Geçmiş", icon: History },
   { href: "/admin/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 
