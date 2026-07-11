@@ -72,23 +72,38 @@ export function TimeOffManager({
       endsAtISO = shopLocalToUtc(ed, et).toISOString();
     }
 
+    const input = {
+      barberId: scope || null,
+      startsAtISO,
+      endsAtISO,
+      reason,
+    };
+
     startTransition(async () => {
-      const res = await createTimeOff({
-        barberId: scope || null,
-        startsAtISO,
-        endsAtISO,
-        reason,
-      });
-      if (!res.ok) {
-        setError(res.error);
+      let res = await createTimeOff(input);
+
+      // Aralıkta aktif randevu varsa kayıt yapılmadı; önce berbere soralım.
+      if (res.status === "needs-confirmation") {
+        const proceed = window.confirm(
+          `Dikkat: bu aralıkta ${res.overlapCount} aktif randevu var.\n` +
+            "İzin bu randevuları iptal etmez — müşterilere haber vermeyi unutmayın.\n\n" +
+            "Yine de izni eklemek istiyor musunuz?",
+        );
+        if (!proceed) return;
+        res = await createTimeOff({ ...input, confirmed: true });
+      }
+
+      if (res.status !== "created") {
+        setError(res.status === "error" ? res.error : "Bir hata oluştu, tekrar deneyin.");
         return;
       }
+
       setAdding(false);
       resetForm();
       if (res.overlapCount > 0) {
         setWarning(
-          `Dikkat: bu aralıkta ${res.overlapCount} aktif randevu var. ` +
-            "Gerekiyorsa Randevular sayfasından iptal et ve müşterilere haber ver.",
+          `İzin eklendi. Bu aralıkta ${res.overlapCount} aktif randevu var — ` +
+            "Randevular sayfasından iptal edip müşterilere haber vermeyi unutma.",
         );
       }
     });

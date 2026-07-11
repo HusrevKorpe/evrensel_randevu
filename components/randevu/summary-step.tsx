@@ -66,7 +66,8 @@ export function SummaryStep({
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Ödeme dükkânda yapılır. Onaylayınca saat senin adına ayrılır.
+        Ödeme dükkânda yapılır. Gönderince bu saat senin için tutulur; ustan
+        onaylayınca randevun kesinleşir.
       </p>
 
       {submitError && (
@@ -129,11 +130,12 @@ export function SuccessView({
         <CheckCircle2 className="size-9" />
       </span>
       <h1 className="mt-5 font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-        Randevun alındı! 🎉
+        Randevu talebin alındı! 🎉
       </h1>
       <p className="mt-2 max-w-sm text-muted-foreground text-balance">
-        {dayLong} · {time} · {barberName}. Randevu bilgin kaydedildi, dükkân
-        gerektiğinde seninle iletişime geçebilir.
+        {dayLong} · {time} · {barberName}. Talebini aldık ve bu saati senin için
+        tuttuk. Ustan onayladıktan sonra randevun kesinleşir; gerekirse dükkân
+        seninle iletişime geçer.
       </p>
 
       {/* Referans numarası */}
