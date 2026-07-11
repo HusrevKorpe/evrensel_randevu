@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Menu, Scissors, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { BookButton } from "@/components/site/book-button";
 import { Button } from "@/components/ui/button";
@@ -51,9 +52,14 @@ export function SiteHeader() {
           className="flex items-center gap-2"
           onClick={() => setOpen(false)}
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-brand text-brand-foreground">
-            <Scissors className="size-5" />
-          </span>
+          <Image
+            src="/logo.png"
+            alt={`${siteConfig.name} logosu`}
+            width={40}
+            height={40}
+            priority
+            className="size-10 rounded-full"
+          />
           <span className="font-heading text-lg font-bold tracking-tight">
             {siteConfig.name}
           </span>
