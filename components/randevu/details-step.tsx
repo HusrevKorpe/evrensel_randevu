@@ -60,7 +60,7 @@ export function DetailsStep({
         label="E-posta"
         htmlFor="email"
         error={errors.email}
-        hint="İsteğe bağlı"
+        hint="isteğe bağlı — iptal durumunda haber verebilmemiz için"
       >
         <input
           id="email"

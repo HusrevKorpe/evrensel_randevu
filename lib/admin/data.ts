@@ -1,7 +1,13 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { addDaysISO, shopLocalToUtc, shopNow } from "@/lib/booking/time";
-import type { AppointmentStatus, Service, TimeOff, WorkingHour } from "@/types";
+import type {
+  AppointmentStatus,
+  BarberWithEmail,
+  Service,
+  TimeOff,
+  WorkingHour,
+} from "@/types";
 
 /**
  * Admin panelinin veri katmanı — SADECE sunucu.
@@ -131,6 +137,26 @@ export async function getAllServices(): Promise<Service[]> {
     return [];
   }
   return (data ?? []) as Service[];
+}
+
+/**
+ * TÜM berberler (pasifler dahil) + bildirim e-postaları.
+ * `email` kolonu anon'a kapalı (0003 migration) ama burada girişli oturumun
+ * RLS'li istemcisi var → authenticated rolü her kolonu okuyabilir.
+ */
+export async function getAllBarbersWithEmail(): Promise<BarberWithEmail[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("barbers")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("getAllBarbersWithEmail:", error.message);
+    return [];
+  }
+  return (data ?? []) as BarberWithEmail[];
 }
 
 /** Tüm çalışma saati satırları (berber+gün bazında). */

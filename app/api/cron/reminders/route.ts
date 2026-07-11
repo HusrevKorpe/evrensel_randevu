@@ -1,8 +1,12 @@
 import type { NextRequest } from "next/server";
-import { sendDueReminders } from "@/lib/notifications/appointments";
+import { sendPendingNags } from "@/lib/notifications/appointments";
 
 /**
- * HATIRLATMA CRON'U — GET /api/cron/reminders
+ * BEKLEYEN RANDEVU DÜRTMESİ — GET /api/cron/reminders
+ *
+ * (Faz 5'te müşteriye hatırlatma atıyordu; Faz 7 kararıyla görevi değişti:
+ * artık yanıtlanmamış `pending` randevuları BERBERE hatırlatır. URL,
+ * vercel.json'daki cron tanımı bozulmasın diye aynı kaldı.)
  *
  * Vercel Cron bu adresi zamanlanmış olarak çağırır (vercel.json > crons).
  * Vercel, projede CRON_SECRET ortam değişkeni tanımlıysa isteğe otomatik
@@ -26,6 +30,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = await sendDueReminders();
+  const result = await sendPendingNags();
   return Response.json(result, { status: result.ok ? 200 : 500 });
 }

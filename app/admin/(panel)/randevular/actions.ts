@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { requireAdmin } from "@/lib/auth/dal";
-import { notifyStatusChange } from "@/lib/notifications/appointments";
+import { notifyCancelled } from "@/lib/notifications/appointments";
 import { createClient } from "@/lib/supabase/server";
 import type { AppointmentStatus } from "@/types";
 
@@ -57,10 +57,10 @@ export async function updateAppointmentStatus(
     return { ok: false, error: "Güncellenemedi, tekrar deneyin." };
   }
 
-  // Onay/iptalde müşteriye e-posta (yanıtı bekletmeden, `after` ile).
-  // Tamamlandı/gelmedi için e-posta atmayız — müşteri zaten dükkandaydı.
-  if (status === "confirmed" || status === "cancelled") {
-    after(() => notifyStatusChange(id, status));
+  // Müşteriye YALNIZCA iptalde e-posta gider (Faz 7 kararı) — boşuna dükkana
+  // gelmesin. Onayda mail yok; `after` ile yanıtı bekletmeden gönderilir.
+  if (status === "cancelled") {
+    after(() => notifyCancelled(id));
   }
 
   // Değişiklik hem listede hem dashboard özetinde hem takvimde görünsün.

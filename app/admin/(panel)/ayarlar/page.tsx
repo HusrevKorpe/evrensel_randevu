@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarOff, ChevronRight, Clock, Scissors } from "lucide-react";
+import { CalendarOff, ChevronRight, Clock, Scissors, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import {
+  getAllBarbersWithEmail,
   getAllServices,
   getAllWorkingHours,
   getUpcomingTimeOff,
 } from "@/lib/admin/data";
-import { getBarbers } from "@/lib/data";
 import { PageHeader } from "@/components/admin/page-header";
 
 export const metadata: Metadata = { title: "Ayarlar" };
 
-/** Ayarlar ana sayfası: üç yönetim alanına açılan kapı + küçük özetler. */
+/** Ayarlar ana sayfası: yönetim alanlarına açılan kapı + küçük özetler. */
 export default async function SettingsPage() {
   await requireAdmin();
 
@@ -20,11 +20,13 @@ export default async function SettingsPage() {
     getAllServices(),
     getAllWorkingHours(),
     getUpcomingTimeOff(),
-    getBarbers(),
+    getAllBarbersWithEmail(),
   ]);
 
   const activeServices = services.filter((s) => s.is_active).length;
   const openDays = new Set(hours.map((h) => h.weekday)).size;
+  const activeBarbers = barbers.filter((b) => b.is_active);
+  const withEmail = activeBarbers.filter((b) => b.email).length;
 
   const cards = [
     {
@@ -35,11 +37,19 @@ export default async function SettingsPage() {
       summary: `${services.length} hizmet · ${activeServices} aktif`,
     },
     {
+      href: "/admin/ayarlar/berberler",
+      icon: Users,
+      title: "Berberler",
+      description:
+        "Bildirim e-postaları: yeni randevu talebi hangi adrese gitsin.",
+      summary: `${activeBarbers.length} berber · ${withEmail} e-posta tanımlı`,
+    },
+    {
       href: "/admin/ayarlar/saatler",
       icon: Clock,
       title: "Çalışma Saatleri",
       description: "Berber bazında haftalık açılış, kapanış ve mola saatleri.",
-      summary: `${barbers.length} berber · haftada ${openDays} gün açık`,
+      summary: `${activeBarbers.length} berber · haftada ${openDays} gün açık`,
     },
     {
       href: "/admin/ayarlar/izinler",
@@ -60,7 +70,7 @@ export default async function SettingsPage() {
         description="Hizmetler, çalışma saatleri ve izinler."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {cards.map(({ href, icon: Icon, title, description, summary }) => (
           <Link
             key={href}

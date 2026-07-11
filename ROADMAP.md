@@ -108,7 +108,8 @@
   - ⚠️ 🙋 Türkiye'de ticari SMS için İYS kaydı + paralı sağlayıcı (Netgsm vb.) gerekir
 
 **✅ Bitti sayılır:** Randevu alınca mail düşüyor, randevudan önce hatırlatma gidiyor. → **TAMAM** 🎉 (canlı gönderim + çift-gönderim engeli + 401 koruması test edildi; SMS bilinçli olarak ertelendi)
-**Deploy notu (Faz 6):** Vercel ortam değişkenlerine `RESEND_API_KEY`, `ADMIN_EMAIL`, `CRON_SECRET`, `REMINDER_HOURS_BEFORE` eklenecek; alan adı alınınca Resend'te doğrulanıp `RESEND_FROM_EMAIL` doldurulacak.
+**⚠️ Güncelleme (2026-07-10):** Müşteri mailleri (talep alındı / onaylandı / hatırlatma) **Faz 7 kararıyla kaldırılacak** — sadece iptal maili kalacak, cron berbere dürtme atacak. Detay: Faz 7.
+**Deploy notu (Faz 6):** Vercel ortam değişkenlerine `RESEND_API_KEY`, `ADMIN_EMAIL`, `CRON_SECRET` eklenecek (`REMINDER_HOURS_BEFORE` Faz 7'de kalktı; `APPROVAL_LINK_SECRET` isteğe bağlı); alan adı alınınca Resend'te doğrulanıp `RESEND_FROM_EMAIL` doldurulacak.
 
 ---
 
@@ -127,7 +128,34 @@
 
 ---
 
+## 📣 Faz 7 — Berber Bazlı Bildirim & Onay _(TAMAM 🎉 — Parça C bilinçli sonraya bırakıldı)_
+**Amaç:** Yeni randevu bildirimi **atanan berbere** gitsin; berber mailden tek tıkla onaylasın/reddetsin.
+Müşteriye artık yalnızca **red/iptal** durumunda mail gider — diğer tüm müşteri mailleri kalkar.
+
+> **Karar (2026-07-10):** Müşteriye giden "talep alındı", "onaylandı" ve hatırlatma mailleri kaldırılacak
+> (Faz 5'in müşteri tarafını geçersiz kılar). Tek istisna: berber reddederse müşteriye otomatik iptal
+> maili (boşuna dükkana gelmesin diye). Formdaki e-posta alanı opsiyonel kalır, etiketi
+> "İptal durumunda haber verebilmemiz için (isteğe bağlı)" olur.
+
+- [x] 🧑‍💻 **Temizlik:** Müşteriye giden "talep alındı" + "onaylandı" + hatırlatma şablonları ve gönderim kodu kaldırıldı; form e-posta etiketi "iptal durumunda haber verebilmemiz için (isteğe bağlı)" oldu
+- [x] 🧑‍💻 **Parça A — Mail doğru berbere:** Migration 0003 (`barbers.email`, anon'a KAPALI kolon); `notifyCreated` atanan berberin adresine gönderir (+ `ADMIN_EMAIL`'e kopya, berber e-postasızsa sadece sahibine); panelde `/admin/ayarlar/berberler` düzenleme sayfası
+- [x] 🙋 **`supabase/migrations/0003_barber_email.sql`'i Supabase SQL Editor'da çalıştır** — çalıştırıldı; anon'un email/`*` okuyamadığı, servis rolünün okuduğu, eski kolonun düştüğü canlı doğrulandı ✓
+- [ ] 🙋 5 berberin e-posta adreslerini topla, panele gir (`/admin/ayarlar/berberler`) — test için Ahmet Usta'ya husrevkorpe@gmail.com tanımlandı, gerisi berberler belli olunca
+- [x] 🧑‍💻 **Parça B — Mailden tek tıkla onay:** İmzalı token'lı (HMAC-SHA256, randevu saatine kadar geçerli) "✅ Onayla / ❌ Reddet" linkleri → `/randevu/onay` sayfası
+  - ✓ Link GET'te DİREKT onaylamaz — önce özet sayfası + buton (mail sunucuları linkleri otomatik açar; direkt onaylasak randevular kendi kendine onaylanırdı)
+  - ✓ Red → müşteriye otomatik iptal maili (e-postası varsa); panel onayında artık müşteriye mail YOK
+  - ✓ Aynı anda iki yanıt yarışı DB'de `status='pending'` şartıyla engellendi; noindex + robots disallow
+- [x] 🧑‍💻 **Cron görev değişimi:** Müşteri hatırlatması silindi; `/api/cron/reminders` artık `pending` bekleyen GELECEK randevuları berber bazında gruplayıp her berbere onay linkli özet/dürtme atar (URL aynı kaldı, vercel.json değişmedi; `REMINDER_HOURS_BEFORE` kalktı)
+- [ ] 🧑‍💻 **Parça C — Berber hesapları (sonraya):** `barbers.user_id` ↔ Supabase Auth eşleşmesi, roller (sahip her şeyi görür / berber sadece kendini), panelde "Randevularım" görünümü + bekleyen rozeti, RLS sıkılaştırma ("berber sadece kendi randevusunu günceller" DB seviyesinde)
+- [x] 🙋 _(Migration sonrası)_ Gerçek uçtan uca test — canlı DB'de doğrulandı (2026-07-11): cron dürtmesi gerçek gönderildi (sent:2), yeni-randevu maili gitti, onay sayfası gerçek randevuyu gösterdi, mailden onay → confirmed / red → cancelled + müşteriye iptal maili, çift yanıt engellendi, yanlış cron secret → 401 ✓
+- ⚠️ 🙋 **Ön koşul:** Resend'te domain doğrulanmadan mailler sadece hesap sahibinin adresine gider (test modu) — yani Faz 7'nin ÇOK berberli gerçek testi yayın (Faz 6) sonrası
+
+**✅ Bitti sayılır:** Randevu gelince doğru berbere mail düşüyor, berber mailden tek tıkla onaylıyor/reddediyor, redde müşteri otomatik haber alıyor.
+
+---
+
 ## 🔗 Bağımlılık sırası
 `Faz 0 → Faz 1` zorunlu ilk ikili. Sonra `Faz 2` ve `Faz 3` paralel gidebilir ama
 randevu akışı (Faz 3) için Faz 1 şart. `Faz 4`, Faz 1+3'e bağlı. `Faz 5`, Faz 3'e bağlı.
-`Faz 6` en son. **Her fazı bitirince canlıda çalışan bir şey görüyorsun** — parça parça ilerliyoruz.
+`Faz 6` yayın için son adım. `Faz 7` kod olarak bağımsız yazılabilir ama gerçek testi yayın sonrası
+(Resend domain doğrulaması şart). **Her fazı bitirince canlıda çalışan bir şey görüyorsun** — parça parça ilerliyoruz.

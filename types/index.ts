@@ -27,7 +27,11 @@ export interface Service {
   created_at: Timestamp;
 }
 
-/** Berber / personel */
+/**
+ * Berber / personel — HERKESE AÇIK alanlar.
+ * `email` bilerek burada YOK: anon rolü o kolonu okuyamaz (0003 migration,
+ * kolon-seviyesi yetki). Admin tarafı için BarberWithEmail kullan.
+ */
 export interface Barber {
   id: UUID;
   name: string;
@@ -37,6 +41,11 @@ export interface Barber {
   sort_order: number;
   is_active: boolean;
   created_at: Timestamp;
+}
+
+/** Berber + bildirim e-postası (yalnızca admin/sunucu tarafında çekilir). */
+export interface BarberWithEmail extends Barber {
+  email: string | null;
 }
 
 /**
@@ -76,7 +85,5 @@ export interface Appointment {
   ends_at: Timestamp;
   status: AppointmentStatus;
   notes: string | null;
-  /** Hatırlatma e-postası gönderim zamanı; null = gönderilmedi (0002_reminders.sql). */
-  reminder_sent_at: Timestamp | null;
   created_at: Timestamp;
 }

@@ -30,12 +30,16 @@ export async function getServices(): Promise<Service[]> {
   return (data ?? []) as Service[];
 }
 
-/** Aktif berberler/personel, sıra numarasına göre. */
+/**
+ * Aktif berberler/personel, sıra numarasına göre.
+ * ⚠️ Kolonlar tek tek sayılır, `*` KULLANMA: anon rolü `email` kolonunu
+ * okuyamaz (0003 migration) ve `*` o kolona da açıldığı için hata verir.
+ */
 export async function getBarbers(): Promise<Barber[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("barbers")
-    .select("*")
+    .select("id, name, title, bio, avatar_url, sort_order, is_active, created_at")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
