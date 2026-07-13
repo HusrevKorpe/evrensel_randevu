@@ -25,8 +25,9 @@ export function ServicesSection({ services }: { services: Service[] }) {
       ) : (
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
-            <div
+            <Link
               key={service.id}
+              href="/randevu"
               className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-brand/40"
             >
               <div className="flex items-start justify-between gap-4">
@@ -51,15 +52,12 @@ export function ServicesSection({ services }: { services: Service[] }) {
                 <span className="font-heading text-xl font-bold text-brand">
                   {formatPrice(service.price)}
                 </span>
-                <Link
-                  href="/randevu"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground"
-                >
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
                   Randevu
                   <ArrowRight className="size-3.5" />
-                </Link>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
