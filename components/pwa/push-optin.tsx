@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, BellRing, Loader2, Share, X } from "lucide-react";
+import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/components/pwa/push-shared";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,21 +16,8 @@ import { cn } from "@/lib/utils";
  *  4) iPhone'da tarayıcı sekmesinde push GELMEZ → "Ana Ekrana Ekle" yönlendirir.
  *
  * VAPID public anahtarı tanımlı değilse (push kapalı) hiçbir şey göstermez.
+ * (Anahtar + base64 yardımcı → components/pwa/push-shared.ts)
  */
-
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-
-/** VAPID public anahtarını tarayıcının beklediği byte dizisine çevirir.
- *  Dönüş, ArrayBuffer tabanlı Uint8Array (BufferSource) olmalı. */
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = window.atob(base64);
-  const buffer = new ArrayBuffer(raw.length);
-  const output = new Uint8Array(buffer);
-  for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
-  return output;
-}
 
 export type PushOptinProps = {
   /** Abone değilken gösterilecek çağrı (ör. "Onaylanınca haber ver"). */
@@ -42,6 +30,14 @@ export type PushOptinProps = {
   onSubscribe: (sub: PushSubscriptionJSON) => Promise<{ ok: boolean; error?: string }>;
   /** Sunucudan sil — endpoint'i alır. */
   onUnsubscribe: (endpoint: string) => Promise<void>;
+  /**
+   * Açılışta MEVCUT aboneliği bu bağlama sessizce yeniden bağla.
+   * Site geneli şerit (notify-banner) izni önceden alıp tarayıcı aboneliğini
+   * kurmuş olabilir ama henüz BU randevuya bağlamamıştır. `true` iken kart,
+   * hazır aboneliği açılış anında `onSubscribe` ile randevuya bağlar →
+   * müşteri ekstra tık yapmadan onay/iptal bildirimini almaya başlar.
+   */
+  rebindOnLoad?: boolean;
   className?: string;
 };
 
@@ -53,6 +49,7 @@ export function PushOptin({
   activeText,
   onSubscribe,
   onUnsubscribe,
+  rebindOnLoad = false,
   className,
 }: PushOptinProps) {
   const [status, setStatus] = useState<Status>("loading");
@@ -91,6 +88,14 @@ export function PushOptin({
         if (existing) {
           setSub(existing);
           setStatus("subscribed");
+          // Şerit izni önceden almış olabilir → bu bağlama (randevu/berber)
+          // henüz bağlanmamış olabilir. Sessizce bağla; hata olsa da UI'ı
+          // bozma (zaten "abone" görünüyor, ölü abonelik gönderimde temizlenir).
+          if (rebindOnLoad) {
+            void onSubscribe(existing.toJSON() as PushSubscriptionJSON).catch(
+              (err) => console.error("push rebind:", err),
+            );
+          }
         } else if (Notification.permission === "denied") {
           setStatus("denied");
         } else {
@@ -106,6 +111,9 @@ export function PushOptin({
     return () => {
       cancelled = true;
     };
+    // Yalnızca MOUNT'ta çalışır: onSubscribe/rebindOnLoad açılış anında
+    // yakalanır (token sayfa ömrü boyunca sabit), tekrar bağlanma istemeyiz.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const subscribe = useCallback(async () => {

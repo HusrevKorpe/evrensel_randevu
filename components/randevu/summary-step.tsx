@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { Service } from "@/types";
 
 type SummaryData = {
-  service: Service;
+  services: Service[];
   barberLabel: string;
   dayLong: string;
   time: string;
@@ -34,14 +34,26 @@ export function SummaryStep({
   data: SummaryData;
   submitError: string | null;
 }) {
+  const totalPrice = data.services.reduce((sum, s) => sum + s.price, 0);
+  const totalDuration = data.services.reduce((sum, s) => sum + s.duration_min, 0);
+
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <Row icon={<Scissors className="size-4" />} label="Hizmet">
-          <span className="font-medium">{data.service.name}</span>
-          <span className="ml-2 text-sm text-muted-foreground">
-            {formatDuration(data.service.duration_min)}
-          </span>
+        <Row
+          icon={<Scissors className="size-4" />}
+          label={data.services.length > 1 ? "Hizmetler" : "Hizmet"}
+        >
+          <div className="space-y-1">
+            {data.services.map((s) => (
+              <div key={s.id}>
+                <span className="font-medium">{s.name}</span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {formatDuration(s.duration_min)}
+                </span>
+              </div>
+            ))}
+          </div>
         </Row>
         <Row icon={<User className="size-4" />} label="Usta">
           <span className="font-medium">{data.barberLabel}</span>
@@ -51,6 +63,9 @@ export function SummaryStep({
         </Row>
         <Row icon={<Clock className="size-4" />} label="Saat">
           <span className="font-medium">{data.time}</span>
+          <span className="ml-2 text-sm text-muted-foreground">
+            (~{formatDuration(totalDuration)})
+          </span>
         </Row>
         <Row icon={<Phone className="size-4" />} label="İletişim" last>
           <span className="font-medium">{data.name}</span>
@@ -62,7 +77,7 @@ export function SummaryStep({
       <div className="flex items-center justify-between rounded-2xl border border-brand/30 bg-brand/5 px-4 py-3.5">
         <span className="text-sm font-medium text-muted-foreground">Toplam</span>
         <span className="font-heading text-2xl font-bold text-brand">
-          {formatPrice(data.service.price)}
+          {formatPrice(totalPrice)}
         </span>
       </div>
 

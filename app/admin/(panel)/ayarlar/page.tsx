@@ -48,8 +48,9 @@ export default async function SettingsPage() {
       href: "/admin/ayarlar/saatler",
       icon: Clock,
       title: "Çalışma Saatleri",
-      description: "Berber bazında haftalık açılış, kapanış ve mola saatleri.",
-      summary: `${activeBarbers.length} berber · haftada ${openDays} gün açık`,
+      description:
+        "Dükkan geneli haftalık açılış, kapanış ve mola saatleri (sitede de görünür).",
+      summary: `Haftada ${openDays} gün açık`,
     },
     {
       href: "/admin/ayarlar/izinler",

@@ -16,43 +16,67 @@ import type { BarberChoice } from "@/lib/booking/availability";
 import { cn } from "@/lib/utils";
 import type { Barber, Service } from "@/types";
 
-// ── Adım 1: Hizmet ──────────────────────────────────────────────────────
+// ── Adım 1: Hizmet (ÇOKLU seçim) ────────────────────────────────────────
 
 export function ServiceStep({
   services,
   selected,
-  onSelect,
+  onToggle,
 }: {
   services: Service[];
-  selected: string | null;
-  onSelect: (id: string) => void;
+  selected: string[];
+  onToggle: (id: string) => void;
 }) {
   if (services.length === 0) {
     return <EmptyNote text="Hizmetler şu an yüklenemedi. Lütfen daha sonra tekrar dene." />;
   }
+
+  // Seçilenlerin canlı toplamı (süre + fiyat) — kullanıcı ne aldığını görsün.
+  const chosen = services.filter((s) => selected.includes(s.id));
+  const totalDuration = chosen.reduce((sum, s) => sum + s.duration_min, 0);
+  const totalPrice = chosen.reduce((sum, s) => sum + s.price, 0);
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {services.map((service) => (
-        <SelectCard
-          key={service.id}
-          selected={selected === service.id}
-          onSelect={() => onSelect(service.id)}
-        >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
-            <Scissors className="size-5" />
-          </span>
-          <span className="ml-3 flex-1 pr-6">
-            <span className="block font-heading font-semibold">{service.name}</span>
-            <span className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="size-3.5" />
-              {formatDuration(service.duration_min)}
+    <div>
+      <p className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Sparkles className="size-3.5 text-brand" />
+        Birden fazla hizmet seçebilirsin — süreler ve ücret toplanır.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {services.map((service) => (
+          <SelectCard
+            key={service.id}
+            selected={selected.includes(service.id)}
+            onSelect={() => onToggle(service.id)}
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+              <Scissors className="size-5" />
             </span>
+            <span className="ml-3 flex-1 pr-6">
+              <span className="block font-heading font-semibold">{service.name}</span>
+              <span className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="size-3.5" />
+                {formatDuration(service.duration_min)}
+              </span>
+            </span>
+            <span className="font-heading text-lg font-bold text-brand">
+              {formatPrice(service.price)}
+            </span>
+          </SelectCard>
+        ))}
+      </div>
+
+      {chosen.length > 0 && (
+        <div className="mt-4 flex items-center justify-between rounded-2xl border border-brand/30 bg-brand/5 px-4 py-3">
+          <span className="text-sm font-medium text-muted-foreground">
+            {chosen.length} hizmet · {formatDuration(totalDuration)}
           </span>
           <span className="font-heading text-lg font-bold text-brand">
-            {formatPrice(service.price)}
+            {formatPrice(totalPrice)}
           </span>
-        </SelectCard>
-      ))}
+        </div>
+      )}
     </div>
   );
 }

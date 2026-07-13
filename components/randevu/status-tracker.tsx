@@ -104,6 +104,8 @@ function StatusCard({ view, token }: { view: CustomerStatusView; token: string }
           activeText="Bildirim açık — onaylanınca haber vereceğiz"
           onSubscribe={(sub) => savePushSubscription(token, sub)}
           onUnsubscribe={(endpoint) => removePushSubscription(token, endpoint)}
+          // Şeritten önceden izin verildiyse hazır aboneliği bu randevuya bağla.
+          rebindOnLoad
         />
       </Shell>
     );

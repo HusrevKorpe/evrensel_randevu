@@ -24,7 +24,8 @@ export function HoursContactSection({
     <Section id="iletisim">
       <SectionHeading
         eyebrow="İletişim"
-        title="Bize ulaş, uğra"
+        eyebrowLine={false}
+        title="Bize ulaş"
         description="Çalışma saatlerimiz, konumumuz ve iletişim bilgilerimiz aşağıda."
       />
 

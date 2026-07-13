@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 import type { WorkingHour } from "@/types";
 
 /**
- * Bir berberin haftalık çalışma saatleri düzenleyicisi.
+ * Dükkan geneli haftalık çalışma saatleri düzenleyicisi (TEK genel şema).
  * Her gün: açık/kapalı anahtarı → açıksa saat aralığı + opsiyonel mola.
- * "Kaydet" tüm haftayı tek server action çağrısıyla yazar.
+ * "Kaydet" tüm haftayı tek server action çağrısıyla yazar; action bu şemayı
+ * tüm berberlere uygular, böylece sitedeki çalışma saatleri de güncellenir.
  */
 
 type DayState = {
@@ -37,6 +38,8 @@ const DEFAULT_DAY: Omit<DayState, "open"> = {
 function buildInitialState(rows: WorkingHour[]): Record<number, DayState> {
   const state: Record<number, DayState> = {};
   for (const wd of WEEK_ORDER) {
+    // Genel şema: tüm berberler aynı saatte olduğundan o güne ait ilk satır
+    // yeterli (hangi berbere ait olduğu önemli değil).
     const row = rows.find((r) => r.weekday === wd);
     state[wd] = row
       ? {
@@ -53,12 +56,8 @@ function buildInitialState(rows: WorkingHour[]): Record<number, DayState> {
 }
 
 export function WorkingHoursEditor({
-  barberId,
-  barberName,
   initialHours,
 }: {
-  barberId: string;
-  barberName: string;
   initialHours: WorkingHour[];
 }) {
   const [days, setDays] = useState(() => buildInitialState(initialHours));
@@ -84,7 +83,7 @@ export function WorkingHoursEditor({
       }),
     );
     startTransition(async () => {
-      const res = await saveWorkingHours(barberId, payload);
+      const res = await saveWorkingHours(payload);
       if (res.ok) setSaved(true);
       else setError(res.error ?? "Bir hata oluştu.");
     });
@@ -96,7 +95,7 @@ export function WorkingHoursEditor({
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
-        <h2 className="font-heading font-semibold">{barberName}</h2>
+        <h2 className="font-heading font-semibold">Haftalık Program</h2>
         <div className="flex items-center gap-2">
           {saved && (
             <span

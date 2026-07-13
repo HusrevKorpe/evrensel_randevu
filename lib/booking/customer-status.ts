@@ -5,6 +5,10 @@ import {
   weeklyHoursFromRows,
   type WeeklyHours,
 } from "@/lib/booking/response-deadline";
+import {
+  combineServiceNames,
+  type ServiceJoinRow,
+} from "@/lib/booking/service-names";
 import type { AppointmentStatus, CustomerStatusView } from "@/types";
 
 /**
@@ -56,7 +60,7 @@ export async function resolveCustomerStatus(
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, barber_id, created_at, starts_at, status, cancel_reason, service:services(name), barber:barbers(name)",
+      "id, barber_id, created_at, starts_at, status, cancel_reason, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)",
     )
     .eq("id", appointmentId)
     .maybeSingle();
@@ -68,6 +72,10 @@ export async function resolveCustomerStatus(
 
   const service = relOf(data.service as { name: string } | { name: string }[] | null);
   const barber = relOf(data.barber as { name: string } | { name: string }[] | null);
+  const serviceName = combineServiceNames(
+    data.service_items as ServiceJoinRow[] | null,
+    service?.name ?? "—",
+  );
 
   let status = data.status as AppointmentStatus;
   let timedOut = status === "cancelled" && data.cancel_reason === "timeout";
@@ -106,7 +114,7 @@ export async function resolveCustomerStatus(
   return {
     status,
     timedOut,
-    serviceName: service?.name ?? "—",
+    serviceName,
     barberName: barber?.name ?? "—",
     startsAtISO: data.starts_at as string,
     reference: (data.id as string).slice(0, 8).toUpperCase(),

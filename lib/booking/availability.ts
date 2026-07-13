@@ -135,30 +135,43 @@ async function computeFreeMap(
   return free;
 }
 
-/** Hizmetin süresini döner; hizmet yoksa/pasifse null. */
-async function getServiceDuration(serviceId: string): Promise<number | null> {
+/**
+ * Seçilen hizmetlerin TOPLAM süresini döner (randevu blok uzunluğu).
+ * Tekrarlar ayıklanır. Liste boşsa ya da hizmetlerden biri yok/pasifse null
+ * → çağıran taraf "uygun saat yok / geçersiz seçim" olarak ele alır.
+ */
+async function getServicesTotalDuration(
+  serviceIds: string[],
+): Promise<number | null> {
+  const ids = [...new Set(serviceIds)];
+  if (ids.length === 0) return null;
+
   const admin = createAdminClient();
   const { data } = await admin
     .from("services")
-    .select("duration_min, is_active")
-    .eq("id", serviceId)
-    .maybeSingle();
-  if (!data || !data.is_active) return null;
-  return data.duration_min as number;
+    .select("id, duration_min, is_active")
+    .in("id", ids);
+
+  // Her istenen hizmet gerçekten var ve aktif olmalı.
+  if (!data || data.length !== ids.length) return null;
+  if (data.some((s) => !s.is_active)) return null;
+
+  return data.reduce((sum, s) => sum + (s.duration_min as number), 0);
 }
 
 export type BarberChoice = string | "any";
 
 /**
- * Bir gün + hizmet + berber(veya "any") için seçilebilir başlangıç saatleri.
+ * Bir gün + hizmet(ler) + berber(veya "any") için seçilebilir başlangıç saatleri.
  * "any" → herhangi bir aktif berberin boş olduğu saatlerin birleşimi.
+ * Süre = seçilen tüm hizmetlerin toplamı (randevu blok uzunluğu).
  */
 export async function getAvailableTimes(params: {
-  serviceId: string;
+  serviceIds: string[];
   barberId: BarberChoice;
   dateISO: string;
 }): Promise<string[]> {
-  const duration = await getServiceDuration(params.serviceId);
+  const duration = await getServicesTotalDuration(params.serviceIds);
   if (!duration) return [];
 
   const free = await computeFreeMap(
@@ -177,12 +190,12 @@ export async function getAvailableTimes(params: {
  * "any" → sort_order'a göre o saatte boş İLK berber. Boş yoksa null.
  */
 export async function pickBarberForSlot(params: {
-  serviceId: string;
+  serviceIds: string[];
   barberId: BarberChoice;
   dateISO: string;
   time: string;
 }): Promise<string | null> {
-  const duration = await getServiceDuration(params.serviceId);
+  const duration = await getServicesTotalDuration(params.serviceIds);
   if (!duration) return null;
 
   const free = await computeFreeMap(

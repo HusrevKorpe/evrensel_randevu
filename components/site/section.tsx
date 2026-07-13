@@ -33,12 +33,15 @@ export function SectionHeading({
   title,
   description,
   align = "center",
+  eyebrowLine = true,
   className,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   align?: "center" | "left";
+  /** Üst etiketin solundaki kısa çizgiyi göster (varsayılan: göster). */
+  eyebrowLine?: boolean;
   className?: string;
 }) {
   return (
@@ -56,7 +59,7 @@ export function SectionHeading({
             align === "center" && "justify-center",
           )}
         >
-          <span className="h-px w-6 bg-brand/60" />
+          {eyebrowLine && <span className="h-px w-6 bg-brand/60" />}
           {eyebrow}
         </span>
       )}

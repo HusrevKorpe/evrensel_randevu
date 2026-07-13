@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NotifyBanner } from "@/components/pwa/notify-banner";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -60,6 +61,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          {/* Site geneli bildirim izni şeridi — /admin ve randevu onay/durum
+              sayfalarında kendini gizler (kendi push istemleri var). */}
+          <NotifyBanner />
         </ThemeProvider>
       </body>
     </html>

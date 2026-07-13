@@ -7,8 +7,10 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Çalışma saati kaydetme (server action).
  *
- * Model basit: bir berberin TÜM haftası tek seferde kaydedilir —
- * önce doğrula, sonra berberin eski satırlarını sil, açık günleri yaz.
+ * Model: TEK genel (dükkan geneli) haftalık şema. Kaydederken bu şema
+ * TÜM berberlere birebir yazılır. Böylece randevu motoru berber bazında
+ * çalışmaya devam eder (hiç değişmez) ama tüm berberler aynı saate sahip
+ * olduğundan vitrindeki dükkan saati = admin'de girilen tek şema.
  * (working_hours'ta satır olmayan gün = kapalı gün.)
  */
 
@@ -53,12 +55,10 @@ function validateDays(days: WorkingDayInput[]): string | null {
 }
 
 export async function saveWorkingHours(
-  barberId: string,
   days: WorkingDayInput[],
 ): Promise<WorkingHoursActionResult> {
   await requireAdmin();
 
-  if (!barberId) return { ok: false, error: "Berber bulunamadı." };
   if (!Array.isArray(days) || days.length > 7)
     return { ok: false, error: "Geçersiz istek." };
   const invalid = validateDays(days);
@@ -66,19 +66,31 @@ export async function saveWorkingHours(
 
   const supabase = await createClient();
 
+  // Genel şema tüm berberlere yazılır → önce hangi berberler var, onu çek.
+  const { data: barberRows, error: barberError } = await supabase
+    .from("barbers")
+    .select("id");
+  if (barberError) {
+    console.error("saveWorkingHours barbers:", barberError.message);
+    return { ok: false, error: "Kaydedilemedi, tekrar deneyin." };
+  }
+  const barberIds = (barberRows ?? []).map((b) => b.id as string);
+
   // Sil + yaz (Supabase JS'te transaction yok; doğrulama yukarıda yapıldığı
-  // için insert'in DB kısıtına takılması beklenmez).
+  // için insert'in DB kısıtına takılması beklenmez). Eski saatleri KOMPLE
+  // temizle — weekday her zaman 0..6 olduğundan bu filtre tüm satırları kapsar.
   const { error: delError } = await supabase
     .from("working_hours")
     .delete()
-    .eq("barber_id", barberId);
+    .gte("weekday", 0);
   if (delError) {
     console.error("saveWorkingHours delete:", delError.message);
     return { ok: false, error: "Kaydedilemedi, tekrar deneyin." };
   }
 
-  if (days.length > 0) {
-    const { error: insError } = await supabase.from("working_hours").insert(
+  if (days.length > 0 && barberIds.length > 0) {
+    // Genel şemayı her berber için çoğalt (berber × açık gün).
+    const rows = barberIds.flatMap((barberId) =>
       days.map((d) => ({
         barber_id: barberId,
         weekday: d.weekday,
@@ -88,6 +100,9 @@ export async function saveWorkingHours(
         break_end: d.breakEnd || null,
       })),
     );
+    const { error: insError } = await supabase
+      .from("working_hours")
+      .insert(rows);
     if (insError) {
       console.error("saveWorkingHours insert:", insError.message);
       return {

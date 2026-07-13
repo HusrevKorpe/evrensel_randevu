@@ -29,7 +29,7 @@ export type SlotsResult =
   | { ok: false; error: string };
 
 export async function fetchSlotsAction(input: {
-  serviceId: string;
+  serviceIds: string[];
   barberId: BarberChoice;
   dateISO: string;
 }): Promise<SlotsResult> {
@@ -50,7 +50,7 @@ export async function fetchSlotsAction(input: {
 // ── Randevu oluştur ────────────────────────────────────────────────────
 
 export type CreateInput = {
-  serviceId: string;
+  serviceIds: string[];
   barberId: BarberChoice;
   dateISO: string;
   time: string; // "HH:MM"
@@ -85,15 +85,31 @@ export async function createAppointmentAction(
 
   const admin = createAdminClient();
 
-  // 2) Hizmet gerçekten var/aktif mi? (süreyi buradan alırız, istemciye güvenmeyiz)
-  const { data: service } = await admin
-    .from("services")
-    .select("id, duration_min, is_active")
-    .eq("id", input.serviceId)
-    .maybeSingle();
-  if (!service || !service.is_active) {
-    return { ok: false, code: "invalid", message: "Seçilen hizmet bulunamadı." };
+  // 2) Hizmet(ler) gerçekten var/aktif mi? Süreyi buradan alırız (istemciye
+  //    güvenmeyiz). Tekrarları ayıkla; en az bir geçerli hizmet olmalı.
+  const serviceIds = [...new Set(input.serviceIds ?? [])];
+  if (serviceIds.length === 0) {
+    return { ok: false, code: "invalid", message: "En az bir hizmet seçmelisin." };
   }
+  const { data: services } = await admin
+    .from("services")
+    .select("id, duration_min, is_active, sort_order")
+    .in("id", serviceIds);
+  if (
+    !services ||
+    services.length !== serviceIds.length ||
+    services.some((s) => !s.is_active)
+  ) {
+    return { ok: false, code: "invalid", message: "Seçilen hizmetlerden biri bulunamadı." };
+  }
+  const totalDuration = services.reduce(
+    (sum, s) => sum + (s.duration_min as number),
+    0,
+  );
+  // Birincil hizmet = sıra numarası en küçük olan (appointments.service_id).
+  const primaryServiceId = [...services].sort(
+    (a, b) => (a.sort_order as number) - (b.sort_order as number),
+  )[0].id as string;
 
   // 3) Tarih ufku içinde mi?
   const { dateISO: today } = shopNow();
@@ -103,7 +119,7 @@ export async function createAppointmentAction(
 
   // 4) Bu slota atanacak boş berberi bul ("Farketmez" → ilk uygun usta)
   const barberId = await pickBarberForSlot({
-    serviceId: input.serviceId,
+    serviceIds,
     barberId: input.barberId,
     dateISO: input.dateISO,
     time: input.time,
@@ -118,7 +134,7 @@ export async function createAppointmentAction(
 
   // 5) Zaman aralığını hesapla ve geçmiş olmadığını doğrula
   const startsAt = shopLocalToUtc(input.dateISO, input.time);
-  const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
+  const endsAt = new Date(startsAt.getTime() + totalDuration * 60_000);
   if (startsAt.getTime() <= Date.now()) {
     return { ok: false, code: "invalid", message: "Geçmiş bir saat seçilemez." };
   }
@@ -129,7 +145,7 @@ export async function createAppointmentAction(
     .from("appointments")
     .insert({
       barber_id: barberId,
-      service_id: service.id,
+      service_id: primaryServiceId,
       customer_name: contact.value.name,
       customer_phone: contact.value.phone,
       customer_email: contact.value.email,
@@ -150,6 +166,24 @@ export async function createAppointmentAction(
       };
     }
     console.error("createAppointmentAction insert:", error);
+    return {
+      ok: false,
+      code: "error",
+      message: "Randevu oluşturulamadı. Lütfen tekrar dene.",
+    };
+  }
+
+  // 6b) Seçilen TÜM hizmetleri ara tabloya yaz (görüntüleme buradan okur).
+  //     Başarısız olursa randevuyu geri al ki "yarım" kayıt kalmasın.
+  const { error: linkError } = await admin.from("appointment_services").insert(
+    serviceIds.map((service_id) => ({
+      appointment_id: created.id as string,
+      service_id,
+    })),
+  );
+  if (linkError) {
+    console.error("createAppointmentAction link:", linkError);
+    await admin.from("appointments").delete().eq("id", created.id as string);
     return {
       ok: false,
       code: "error",

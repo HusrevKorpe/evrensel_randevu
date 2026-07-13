@@ -19,6 +19,10 @@ import {
   customerConfirmedPush,
   staffNewBookingPush,
 } from "@/lib/notifications/push-templates";
+import {
+  combineServiceNames,
+  type ServiceJoinRow,
+} from "@/lib/booking/service-names";
 import { siteConfig } from "@/lib/site";
 import type { AppointmentStatus } from "@/types";
 
@@ -63,7 +67,7 @@ export async function fetchAppointment(
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, starts_at, status, cancel_reason, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(id, name, email)",
+      "id, starts_at, status, cancel_reason, customer_name, customer_phone, customer_email, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -87,7 +91,10 @@ export async function fetchAppointment(
     customerName: data.customer_name,
     customerPhone: data.customer_phone,
     customerEmail: data.customer_email,
-    serviceName: service?.name ?? "—",
+    serviceName: combineServiceNames(
+      data.service_items as ServiceJoinRow[] | null,
+      service?.name ?? "—",
+    ),
     barberName: barber?.name ?? "—",
     barberId: barber?.id ?? null,
     barberEmail: barber?.email ?? null,
@@ -227,7 +234,7 @@ export async function sendPendingNags(): Promise<NagRunResult> {
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, starts_at, customer_name, customer_phone, notes, service:services(name), barber:barbers(id, name, email)",
+      "id, starts_at, customer_name, customer_phone, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
     )
     .eq("status", "pending")
     .gt("starts_at", new Date().toISOString())
@@ -255,7 +262,10 @@ export async function sendPendingNags(): Promise<NagRunResult> {
     const emailData: AppointmentEmailData = {
       customerName: row.customer_name,
       customerPhone: row.customer_phone,
-      serviceName: service?.name ?? "—",
+      serviceName: combineServiceNames(
+        row.service_items as ServiceJoinRow[] | null,
+        service?.name ?? "—",
+      ),
       barberName: barber.name,
       startsAtISO: row.starts_at,
       reference: (row.id as string).slice(0, 8).toUpperCase(),

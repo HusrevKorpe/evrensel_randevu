@@ -1,6 +1,10 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { addDaysISO, shopLocalToUtc, shopNow } from "@/lib/booking/time";
+import {
+  combineServiceNames,
+  type ServiceJoinRow,
+} from "@/lib/booking/service-names";
 import type {
   AppointmentStatus,
   BarberWithEmail,
@@ -36,6 +40,7 @@ export type AdminAppointment = {
 /** Supabase gömülü select'ten dönen ham satır tipi. */
 type Row = Omit<AdminAppointment, "service_name" | "barber_name"> & {
   service: { name: string } | { name: string }[] | null;
+  service_items: ServiceJoinRow[] | null;
   barber: { name: string } | { name: string }[] | null;
 };
 
@@ -45,9 +50,13 @@ function nameOf(rel: Row["service"]): string {
   return Array.isArray(rel) ? (rel[0]?.name ?? "—") : rel.name;
 }
 
-/** Randevu sorgularının ortak select'i (hizmet + berber adı gömülü). */
+/**
+ * Randevu sorgularının ortak select'i.
+ * `service` = birincil hizmet (yedek), `service_items` = seçilen TÜM hizmetler
+ * (ara tablo) → adları birleştirilir. `barber` = usta adı.
+ */
 const APPOINTMENT_SELECT =
-  "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(name)";
+  "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)";
 
 /** Ham satırı panel randevusuna çevirir (gömülü ilişkileri düzleştirir). */
 function toAdminAppointment(r: Row): AdminAppointment {
@@ -61,7 +70,7 @@ function toAdminAppointment(r: Row): AdminAppointment {
     customer_phone: r.customer_phone,
     customer_email: r.customer_email,
     notes: r.notes,
-    service_name: nameOf(r.service),
+    service_name: combineServiceNames(r.service_items, nameOf(r.service)),
     barber_name: nameOf(r.barber),
   };
 }

@@ -54,7 +54,7 @@ export function BookingWizard({
   weekdaysByBarber: Record<string, number[]>;
 }) {
   const [step, setStep] = React.useState(1);
-  const [serviceId, setServiceId] = React.useState<string | null>(null);
+  const [serviceIds, setServiceIds] = React.useState<string[]>([]);
   const [barberId, setBarberId] = React.useState<BarberChoice | null>(null);
   const [dateISO, setDateISO] = React.useState<string | null>(null);
   const [time, setTime] = React.useState<string | null>(null);
@@ -77,7 +77,10 @@ export function BookingWizard({
     trackUrl: string | null;
   } | null>(null);
 
-  const selectedService = services.find((s) => s.id === serviceId) ?? null;
+  // Seçilen hizmetler — `services` zaten sort_order sırasında olduğundan
+  // filtreleme o sırayı korur (özet/başarı ekranı düzenli görünür).
+  const selectedServices = services.filter((s) => serviceIds.includes(s.id));
+  const serviceKey = serviceIds.join(","); // effect için sabit (primitive) anahtar
   const selectedDay = days.find((d) => d.iso === dateISO) ?? null;
   const barberLabel =
     barberId === "any"
@@ -97,9 +100,10 @@ export function BookingWizard({
   // Hizmet/usta/tarih hazır olunca uygun saatleri çek. Süre değiştiğinden
   // her değişiklikte yeniden hesaplanır. reloadKey → "saat doldu" sonrası zorla yenile.
   React.useEffect(() => {
-    if (!serviceId || !barberId || !dateISO) return;
-    // Daraltılmış (null olmayan) değerleri sabitleyelim — iç fonksiyonda kullanılacak.
-    const sId = serviceId;
+    // Hizmet listesini anahtardan geri kur → effect yalnızca primitive'lere
+    // bağlı olur (dizi kimliği her render değişmesin diye).
+    const sIds = serviceKey ? serviceKey.split(",") : [];
+    if (sIds.length === 0 || !barberId || !dateISO) return;
     const bId = barberId;
     const dISO = dateISO;
     let cancelled = false;
@@ -108,7 +112,7 @@ export function BookingWizard({
       setSlotsLoading(true);
       setSlotsError(null);
       try {
-        const res = await fetchSlotsAction({ serviceId: sId, barberId: bId, dateISO: dISO });
+        const res = await fetchSlotsAction({ serviceIds: sIds, barberId: bId, dateISO: dISO });
         if (cancelled) return;
         if (res.ok) setSlots(res.times);
         else {
@@ -129,12 +133,19 @@ export function BookingWizard({
     return () => {
       cancelled = true;
     };
-  }, [serviceId, barberId, dateISO, reloadKey]);
+  }, [serviceKey, barberId, dateISO, reloadKey]);
 
   // ── Seçim işleyicileri (bir üst adımı değiştirmek alt seçimleri sıfırlar) ──
-  function selectService(id: string) {
-    if (id !== serviceId) setTime(null);
-    setServiceId(id);
+  // Hizmet ÇOKLU seçilir: karta basınca ekler/çıkarır (otomatik ilerlemez).
+  // Seçim değişince süre değişir → uygun saat seçimi artık geçersiz, sıfırla.
+  function toggleService(id: string) {
+    setServiceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+    setTime(null);
+  }
+  function continueFromServices() {
+    if (serviceIds.length === 0) return;
     setStep(2);
   }
   function selectBarber(b: BarberChoice) {
@@ -171,12 +182,12 @@ export function BookingWizard({
   }
 
   async function confirm() {
-    if (!serviceId || !barberId || !dateISO || !time) return;
+    if (serviceIds.length === 0 || !barberId || !dateISO || !time) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
       const res = await createAppointmentAction({
-        serviceId,
+        serviceIds,
         barberId,
         dateISO,
         time,
@@ -214,7 +225,7 @@ export function BookingWizard({
 
   function reset() {
     setStep(1);
-    setServiceId(null);
+    setServiceIds([]);
     setBarberId(null);
     setDateISO(null);
     setTime(null);
@@ -228,11 +239,11 @@ export function BookingWizard({
   }
 
   // ── Başarı ekranı ──
-  if (result && selectedService && selectedDay && time) {
+  if (result && selectedServices.length > 0 && selectedDay && time) {
     return (
       <SuccessView
         reference={result.reference}
-        serviceName={selectedService.name}
+        serviceName={selectedServices.map((s) => s.name).join(", ")}
         barberName={result.barberName}
         dayLong={selectedDay.long}
         time={time}
@@ -262,8 +273,8 @@ export function BookingWizard({
           {step === 1 && (
             <ServiceStep
               services={services}
-              selected={serviceId}
-              onSelect={selectService}
+              selected={serviceIds}
+              onToggle={toggleService}
             />
           )}
           {step === 2 && (
@@ -298,10 +309,10 @@ export function BookingWizard({
               onChange={updateDetails}
             />
           )}
-          {step === 6 && selectedService && selectedDay && time && (
+          {step === 6 && selectedServices.length > 0 && selectedDay && time && (
             <SummaryStep
               data={{
-                service: selectedService,
+                services: selectedServices,
                 barberLabel,
                 dayLong: selectedDay.long,
                 time,
@@ -318,7 +329,9 @@ export function BookingWizard({
       <Footer
         step={step}
         submitting={submitting}
+        canContinueServices={serviceIds.length > 0}
         onBack={() => setStep((s) => Math.max(1, s - 1))}
+        onServicesContinue={continueFromServices}
         onContinue={continueFromDetails}
         onConfirm={confirm}
       />
@@ -399,17 +412,27 @@ function Stepper({ step }: { step: number }) {
 function Footer({
   step,
   submitting,
+  canContinueServices,
   onBack,
+  onServicesContinue,
   onContinue,
   onConfirm,
 }: {
   step: number;
   submitting: boolean;
+  canContinueServices: boolean;
   onBack: () => void;
+  onServicesContinue: () => void;
   onContinue: () => void;
   onConfirm: () => void;
 }) {
-  const showPrimary = step === 5 || step === 6;
+  // Adım 1 (çoklu hizmet) ve 5/6'da birincil buton var. Diğer adımlarda
+  // seçim otomatik ilerlettiği için buton yerine ipucu gösterilir.
+  const showPrimary = step === 1 || step === 5 || step === 6;
+  const onPrimary =
+    step === 1 ? onServicesContinue : step === 5 ? onContinue : onConfirm;
+  const primaryLabel = step === 6 ? "Talebi Gönder" : "Devam";
+  const primaryDisabled = submitting || (step === 1 && !canContinueServices);
 
   return (
     <div className="mt-8 flex items-center justify-between gap-3 border-t border-border/60 pt-5">
@@ -424,8 +447,8 @@ function Footer({
 
       {showPrimary ? (
         <Button
-          onClick={step === 5 ? onContinue : onConfirm}
-          disabled={submitting}
+          onClick={onPrimary}
+          disabled={primaryDisabled}
           className="h-11 min-w-40 bg-brand px-6 text-base font-semibold text-brand-foreground hover:bg-brand/90"
         >
           {submitting ? (
@@ -433,10 +456,8 @@ function Footer({
               <Loader2 className="size-4 animate-spin" />
               Gönderiliyor…
             </>
-          ) : step === 5 ? (
-            "Devam"
           ) : (
-            "Talebi Gönder"
+            primaryLabel
           )}
         </Button>
       ) : (
