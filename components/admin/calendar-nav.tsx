@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Columns3, Rows3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns3, Rows3, Undo2 } from "lucide-react";
 import { addDaysISO } from "@/lib/booking/time";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -86,8 +86,9 @@ export function CalendarNav({
         <ChevronRight />
       </Button>
       {date !== today && (
-        <Button variant="ghost" size="sm" onClick={() => go(today, view)}>
-          Bugün
+        <Button variant="outline" size="sm" onClick={() => go(today, view)}>
+          <Undo2 />
+          Bugüne dön
         </Button>
       )}
     </div>

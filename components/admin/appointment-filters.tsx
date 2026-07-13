@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { addDaysISO } from "@/lib/booking/time";
 import { STATUS_LABELS, STATUS_ORDER } from "@/lib/admin/status";
 import { Button } from "@/components/ui/button";
@@ -69,8 +69,9 @@ export function AppointmentFilters({
           <ChevronRight />
         </Button>
         {date !== today && (
-          <Button variant="ghost" size="sm" onClick={() => go(today, status)}>
-            Bugün
+          <Button variant="outline" size="sm" onClick={() => go(today, status)}>
+            <Undo2 />
+            Bugüne dön
           </Button>
         )}
       </div>
