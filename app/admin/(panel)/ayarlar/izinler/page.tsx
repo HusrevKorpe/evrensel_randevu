@@ -10,8 +10,12 @@ import { TimeOffManager } from "@/components/admin/time-off-manager";
 export const metadata: Metadata = { title: "İzinler" };
 
 export default async function TimeOffSettingsPage() {
-  await requireAdmin();
-  const [barbers, entries] = await Promise.all([getBarbers(), getUpcomingTimeOff()]);
+  // Auth kontrolü + iki sorgu hepsi paralel.
+  const [, barbers, entries] = await Promise.all([
+    requireAdmin(),
+    getBarbers(),
+    getUpcomingTimeOff(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

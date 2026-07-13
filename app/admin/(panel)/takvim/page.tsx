@@ -60,15 +60,16 @@ export default async function CalendarPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  await requireAdmin();
+  // Bu ikisi searchParams'tan BAĞIMSIZ (tarihe/görünüme bakmaz) → en başta
+  // ateşle; çözülmelerini beklerken aşağıdaki işler paralel ilerlesin.
+  const authPromise = requireAdmin();
+  const boundsPromise = getCalendarHourBounds();
 
   const sp = await searchParams;
   const today = shopNow().dateISO;
   const dateRaw = typeof sp.date === "string" ? sp.date : undefined;
   const date = dateRaw && DATE_RE.test(dateRaw) ? dateRaw : today;
   const view: CalendarView = sp.view === "gun" ? "gun" : "hafta";
-
-  const bounds = await getCalendarHourBounds();
 
   let columns: CalendarColumn[];
   let description: string;
@@ -78,11 +79,14 @@ export default async function CalendarPage({
     const monday = mondayOf(date);
     const startISO = shopLocalToUtc(monday, "00:00").toISOString();
     const endISO = shopLocalToUtc(addDaysISO(monday, 7), "00:00").toISOString();
-    const appts = await getAppointmentsInRange(startISO, endISO, [
-      "pending",
-      "confirmed",
-      "completed",
-      "no_show",
+    const [appts] = await Promise.all([
+      getAppointmentsInRange(startISO, endISO, [
+        "pending",
+        "confirmed",
+        "completed",
+        "no_show",
+      ]),
+      authPromise,
     ]);
 
     // Randevuları dükkan yerelindeki gününe göre grupla.
@@ -116,6 +120,7 @@ export default async function CalendarPage({
         "no_show",
       ]),
       getBarbers(),
+      authPromise,
     ]);
 
     // Pasif berberde randevu kalmış olabilir → sütunu yine de göster.
@@ -137,6 +142,9 @@ export default async function CalendarPage({
     }));
     description = formatDateLong(startISO);
   }
+
+  // En başta ateşlenmişti; bu noktada büyük ihtimalle çoktan hazır.
+  const bounds = await boundsPromise;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

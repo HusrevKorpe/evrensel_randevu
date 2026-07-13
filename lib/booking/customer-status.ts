@@ -119,7 +119,11 @@ export async function resolveCustomerStatus(
  * toplu zaman aşımına düşürür → slotları serbest kalır. Tembel-expire zaten
  * sayfayı AÇAN müşteri için anında çalışır; bu, açmayanları temizler.
  */
-export async function expirePendingAppointments(): Promise<{ expired: number }> {
+export async function expirePendingAppointments(): Promise<{
+  expired: number;
+  /** Zaman aşımına düşürülen randevu id'leri (müşteriye push atmak için). */
+  ids: string[];
+}> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("appointments")
@@ -128,7 +132,7 @@ export async function expirePendingAppointments(): Promise<{ expired: number }> 
 
   if (error) {
     console.error("expirePendingAppointments:", error.message);
-    return { expired: 0 };
+    return { expired: 0, ids: [] };
   }
 
   const rows = data ?? [];
@@ -151,7 +155,7 @@ export async function expirePendingAppointments(): Promise<{ expired: number }> 
     if (Date.now() > deadline.getTime()) toExpire.push(row.id as string);
   }
 
-  if (toExpire.length === 0) return { expired: 0 };
+  if (toExpire.length === 0) return { expired: 0, ids: [] };
 
   const { data: updated, error: upErr } = await admin
     .from("appointments")
@@ -162,7 +166,8 @@ export async function expirePendingAppointments(): Promise<{ expired: number }> 
 
   if (upErr) {
     console.error("expirePendingAppointments update:", upErr.message);
-    return { expired: 0 };
+    return { expired: 0, ids: [] };
   }
-  return { expired: updated?.length ?? 0 };
+  const ids = (updated ?? []).map((r) => r.id as string);
+  return { expired: ids.length, ids };
 }

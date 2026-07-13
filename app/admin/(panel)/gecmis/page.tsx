@@ -23,11 +23,15 @@ export default async function HistoryPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  await requireAdmin();
+  const authPromise = requireAdmin();
 
   const sp = await searchParams;
   const requested = parsePage(typeof sp.page === "string" ? sp.page : undefined);
-  const { items, total, page } = await getPastAppointments(requested, PAGE_SIZE);
+  // Geçmiş sorgusu ile auth kontrolü paralel.
+  const [{ items, total, page }] = await Promise.all([
+    getPastAppointments(requested, PAGE_SIZE),
+    authPromise,
+  ]);
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   // Kartları dükkan yerel gününe göre grupla — liste zaten yeniden eskiye

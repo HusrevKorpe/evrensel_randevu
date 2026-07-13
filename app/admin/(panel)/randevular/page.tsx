@@ -28,7 +28,9 @@ export default async function AppointmentsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  await requireAdmin();
+  // Auth'u hemen ATEŞLE ama bekleme; searchParams çözülürken getUser
+  // gidiş-dönüşü arka planda ilerlesin (aşağıda Promise.all ile toplarız).
+  const authPromise = requireAdmin();
 
   const sp = await searchParams;
   const today = shopNow().dateISO;
@@ -37,7 +39,11 @@ export default async function AppointmentsPage({
   const status = parseStatus(typeof sp.status === "string" ? sp.status : undefined);
 
   const { startISO, endISO } = dayRangeUtc(date);
-  const all = await getAppointmentsInRange(startISO, endISO); // tüm durumlar (iptaller dahil)
+  // Randevu sorgusu ile auth kontrolü paralel: biri diğerini beklemesin.
+  const [all] = await Promise.all([
+    getAppointmentsInRange(startISO, endISO), // tüm durumlar (iptaller dahil)
+    authPromise,
+  ]);
 
   const counts: Record<StatusFilter, number> = {
     all: all.length,

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getVerifiedUser } from "@/lib/auth/claims";
 
 /**
  * DATA ACCESS LAYER (DAL) — auth kontrolünü TEK yerde toplar.
@@ -14,13 +15,16 @@ import { createClient } from "@/lib/supabase/server";
  * sağlar → aynı istekte 5 yerde çağırsak da Supabase'e 1 kez gidilir.
  */
 
-/** Girişli kullanıcıyı döner; giriş yoksa null. Yönlendirme YAPMAZ. */
+/**
+ * Girişli kullanıcıyı döner; giriş yoksa null. Yönlendirme YAPMAZ.
+ *
+ * `getUser()` yerine YEREL doğrulama (getClaims): asimetrik JWT anahtarıyla
+ * imza yerelde doğrulanır → her sayfa render'ında Supabase Auth'a ağ gidiş-
+ * dönüşü olmaz. Asimetrik anahtar kapalıysa güvenle getUser'a düşer.
+ */
 export const getAdminUser = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  return getVerifiedUser(supabase);
 });
 
 /** Korumalı sayfa/eylemlerde kullan: giriş yoksa login'e atar, varsa user döner. */

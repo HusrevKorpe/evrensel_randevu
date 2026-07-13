@@ -9,8 +9,8 @@ import { ServicesManager } from "@/components/admin/services-manager";
 export const metadata: Metadata = { title: "Hizmetler" };
 
 export default async function ServicesSettingsPage() {
-  await requireAdmin();
-  const services = await getAllServices();
+  // Auth kontrolü ile hizmet sorgusu paralel.
+  const [, services] = await Promise.all([requireAdmin(), getAllServices()]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

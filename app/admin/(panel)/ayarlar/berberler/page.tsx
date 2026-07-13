@@ -13,8 +13,11 @@ export const metadata: Metadata = { title: "Berberler" };
  * dürtmesi buradaki adrese gider (Faz 7).
  */
 export default async function BarbersSettingsPage() {
-  await requireAdmin();
-  const barbers = await getAllBarbersWithEmail();
+  // Auth kontrolü ile berber sorgusu paralel.
+  const [, barbers] = await Promise.all([
+    requireAdmin(),
+    getAllBarbersWithEmail(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

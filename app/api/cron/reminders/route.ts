@@ -1,5 +1,6 @@
+import { after } from "next/server";
 import type { NextRequest } from "next/server";
-import { sendPendingNags } from "@/lib/notifications/appointments";
+import { notifyTimedOut, sendPendingNags } from "@/lib/notifications/appointments";
 import { expirePendingAppointments } from "@/lib/booking/customer-status";
 
 /**
@@ -39,6 +40,13 @@ export async function GET(request: NextRequest) {
 
   // 1) Önce süresi geçmişleri temizle, 2) kalanları berbere hatırlat.
   const swept = await expirePendingAppointments();
+
+  // Zaman aşımına düşen randevuların (izin vermiş) müşterilerine PUSH bildir —
+  // cevabı bekletmeden. Push-only; e-posta akışı etkilenmez.
+  if (swept.ids.length) {
+    after(() => Promise.all(swept.ids.map((id) => notifyTimedOut(id))));
+  }
+
   const result = await sendPendingNags();
   return Response.json(
     { ...result, expired: swept.expired },

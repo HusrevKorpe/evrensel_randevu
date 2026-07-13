@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { verifyApprovalToken } from "@/lib/notifications/approval-token";
-import { notifyCancelled } from "@/lib/notifications/appointments";
+import { notifyCancelled, notifyConfirmed } from "@/lib/notifications/appointments";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -65,9 +65,12 @@ export async function respondToAppointment(
     };
   }
 
-  // Redde müşteriye iptal maili — yanıtı bekletmeden.
+  // Redde müşteriye iptal maili + push; onayda (izin vermiş müşteriye) push.
+  // Yanıtı bekletmeden.
   if (status === "cancelled") {
     after(() => notifyCancelled(check.appointmentId));
+  } else {
+    after(() => notifyConfirmed(check.appointmentId));
   }
 
   // Panel ekranları taze veriyi görsün.

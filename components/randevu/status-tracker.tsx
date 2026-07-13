@@ -10,7 +10,12 @@ import {
   Hourglass,
   Phone,
 } from "lucide-react";
-import { checkAppointmentStatus } from "@/app/randevu/durum/actions";
+import {
+  checkAppointmentStatus,
+  removePushSubscription,
+  savePushSubscription,
+} from "@/app/randevu/durum/actions";
+import { PushOptin } from "@/components/pwa/push-optin";
 import { formatClock, formatDateLong, telHref } from "@/lib/format";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -60,12 +65,12 @@ export function StatusTracker({
     };
   }, [refresh, view.status]);
 
-  return <StatusCard view={view} />;
+  return <StatusCard view={view} token={token} />;
 }
 
 // ── Duruma göre kart ────────────────────────────────────────────────────
 
-function StatusCard({ view }: { view: CustomerStatusView }) {
+function StatusCard({ view, token }: { view: CustomerStatusView; token: string }) {
   const summary = (
     <AppointmentSummary
       serviceName={view.serviceName}
@@ -92,6 +97,14 @@ function StatusCard({ view }: { view: CustomerStatusView }) {
       >
         {summary}
         <LiveHint />
+        <PushOptin
+          className="mt-4"
+          title="Onaylanınca telefonuna haber verelim mi?"
+          hint="İzin verirsen ustan randevunu onayladığı an bildirim düşer — bu sayfayı açık tutmana gerek kalmaz."
+          activeText="Bildirim açık — onaylanınca haber vereceğiz"
+          onSubscribe={(sub) => savePushSubscription(token, sub)}
+          onUnsubscribe={(endpoint) => removePushSubscription(token, endpoint)}
+        />
       </Shell>
     );
   }

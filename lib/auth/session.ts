@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getVerifiedUser } from "@/lib/auth/claims";
 
 /**
  * OTURUM TAZELEME + /admin KORUMASI — proxy.ts'ten çağrılır.
@@ -41,12 +42,12 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     },
   );
 
-  // ÖNEMLİ: createServerClient ile getUser arasına başka kod koyma —
-  // token tazeleme tam burada olur. getUser sunucuda DOĞRULANMIŞ kullanıcıyı verir
-  // (çerezdeki veriye körlemesine güvenmez).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ÖNEMLİ: createServerClient ile auth çağrısı arasına oturuma DOKUNAN kod koyma —
+  // token tazeleme tam burada olur. getVerifiedUser içeride getClaims kullanır:
+  // token'ı (gerekiyorsa getSession ile) YENİLER, sonra JWT imzasını YERELDE
+  // doğrular → çerezdeki veriye körlemesine güvenmez ama ağ gidiş-dönüşü de yapmaz.
+  // (İçindeki public JWKS çekimi oturuma/çereze dokunmaz, tazelemeyi bozmaz.)
+  const user = await getVerifiedUser(supabase);
 
   const path = request.nextUrl.pathname;
   const isLoginPage = path === LOGIN_PATH;

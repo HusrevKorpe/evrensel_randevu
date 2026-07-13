@@ -14,9 +14,9 @@ export const metadata: Metadata = { title: "Ayarlar" };
 
 /** Ayarlar ana sayfası: yönetim alanlarına açılan kapı + küçük özetler. */
 export default async function SettingsPage() {
-  await requireAdmin();
-
-  const [services, hours, timeOff, barbers] = await Promise.all([
+  // Auth kontrolü + 4 özet sorgusu hepsi tek seferde PARALEL.
+  const [, services, hours, timeOff, barbers] = await Promise.all([
+    requireAdmin(),
     getAllServices(),
     getAllWorkingHours(),
     getUpcomingTimeOff(),

@@ -10,8 +10,12 @@ import { WorkingHoursEditor } from "@/components/admin/working-hours-editor";
 export const metadata: Metadata = { title: "Çalışma Saatleri" };
 
 export default async function WorkingHoursSettingsPage() {
-  await requireAdmin();
-  const [barbers, hours] = await Promise.all([getBarbers(), getAllWorkingHours()]);
+  // Auth kontrolü + iki sorgu hepsi paralel.
+  const [, barbers, hours] = await Promise.all([
+    requireAdmin(),
+    getBarbers(),
+    getAllWorkingHours(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

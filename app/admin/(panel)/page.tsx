@@ -4,6 +4,7 @@ import { CalendarDays, ChevronRight, Clock } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import { dayRangeUtc, getAppointmentsInRange } from "@/lib/admin/data";
 import { PageHeader } from "@/components/admin/page-header";
+import { StaffPush } from "@/components/admin/staff-push";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatClock, formatDateLong } from "@/lib/format";
 
@@ -15,10 +16,15 @@ export const metadata: Metadata = { title: "Panel" };
  * veriye en yakın yerde tekrarlamak Next.js'in önerdiği güvenli yaklaşım.
  */
 export default async function DashboardPage() {
-  await requireAdmin();
-
   const { startISO, endISO } = dayRangeUtc(); // bugün (İstanbul)
-  const all = await getAppointmentsInRange(startISO, endISO);
+
+  // Auth kontrolü ile veri çekme birbirinden BAĞIMSIZ iki Supabase gidiş-dönüşü.
+  // Sırayla beklemek yerine PARALEL çalıştır (biri diğerini bekletmesin).
+  // Giriş yoksa requireAdmin yönlendirir → veri hiç render edilmez, sızıntı olmaz.
+  const [, all] = await Promise.all([
+    requireAdmin(),
+    getAppointmentsInRange(startISO, endISO),
+  ]);
   const active = all.filter((a) => a.status !== "cancelled");
 
   const counts = {
@@ -43,6 +49,8 @@ export default async function DashboardPage() {
           </Link>
         }
       />
+
+      <StaffPush />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Bugün toplam" value={counts.total} />

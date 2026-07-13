@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/notifications/email";
-import { buildApprovalLinks } from "@/lib/notifications/approval-token";
+import { buildApprovalLinks, buildTrackingLink } from "@/lib/notifications/approval-token";
 import {
   cancelledEmail,
   newBookingBarberEmail,
@@ -9,6 +9,16 @@ import {
   type AppointmentEmailData,
   type PendingNagItem,
 } from "@/lib/notifications/templates";
+import {
+  getCustomerSubscriptions,
+  getStaffSubscriptions,
+  pushToSubscriptions,
+} from "@/lib/notifications/push-subscriptions";
+import {
+  customerCancelledPush,
+  customerConfirmedPush,
+  staffNewBookingPush,
+} from "@/lib/notifications/push-templates";
 import { siteConfig } from "@/lib/site";
 import type { AppointmentStatus } from "@/types";
 
@@ -36,9 +46,13 @@ function relOf<T>(rel: T | T[] | null): T | null {
 }
 
 export type FetchedAppointment = AppointmentEmailData & {
+  id: string;
   status: AppointmentStatus;
   customerEmail: string | null;
+  barberId: string | null;
   barberEmail: string | null;
+  /** null=elle iptal/red, 'timeout'=usta süresinde yanıtlamadı. */
+  cancelReason: string | null;
 };
 
 /** Randevuyu hizmet/berber ad + berber e-postasıyla çeker; bulunamazsa null. */
@@ -49,7 +63,7 @@ export async function fetchAppointment(
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, starts_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(name, email)",
+      "id, starts_at, status, cancel_reason, customer_name, customer_phone, customer_email, notes, service:services(name), barber:barbers(id, name, email)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -62,22 +76,35 @@ export async function fetchAppointment(
   const service = relOf(data.service as { name: string } | { name: string }[] | null);
   const barber = relOf(
     data.barber as
-      | { name: string; email: string | null }
-      | { name: string; email: string | null }[]
+      | { id: string; name: string; email: string | null }
+      | { id: string; name: string; email: string | null }[]
       | null,
   );
 
   return {
+    id: data.id as string,
     status: data.status as AppointmentStatus,
     customerName: data.customer_name,
     customerPhone: data.customer_phone,
     customerEmail: data.customer_email,
     serviceName: service?.name ?? "—",
     barberName: barber?.name ?? "—",
+    barberId: barber?.id ?? null,
     barberEmail: barber?.email ?? null,
     startsAtISO: data.starts_at,
     reference: (data.id as string).slice(0, 8).toUpperCase(),
     notes: data.notes,
+    cancelReason: (data.cancel_reason as string | null) ?? null,
+  };
+}
+
+/** FetchedAppointment'tan push şablonları için ortak müşteri verisi. */
+function customerData(appt: FetchedAppointment) {
+  return {
+    serviceName: appt.serviceName,
+    barberName: appt.barberName,
+    startsAtISO: appt.startsAtISO,
+    reference: appt.reference,
   };
 }
 
@@ -91,22 +118,88 @@ export async function notifyCreated(appointmentId: string): Promise<void> {
     const appt = await fetchAppointment(appointmentId);
     if (!appt) return;
 
+    // 1) E-POSTA (mevcut davranış — DEĞİŞMEDİ): atanan berbere onay/red maili.
     const links = buildApprovalLinks(appointmentId, appt.startsAtISO);
     const content = newBookingBarberEmail(appt, links);
     await sendEmail({ to: appt.barberEmail || adminEmail(), ...content });
+
+    // 2) PUSH (yeni, e-postanın yanına): izin vermiş berber/sahip cihazlarına.
+    if (appt.barberId) {
+      const subs = await getStaffSubscriptions(appt.barberId);
+      if (subs.length) {
+        await pushToSubscriptions(
+          subs,
+          staffNewBookingPush({ customerName: appt.customerName, ...customerData(appt) }),
+        );
+      }
+    }
   } catch (err) {
     console.error("notifyCreated:", err);
   }
 }
 
-/** İptal/red: müşteriye bilgi (e-postası varsa). Onayda mail atılmaz. */
+/**
+ * ONAY: müşteriye SEVİNDİRİCİ push (e-posta bilinçli GÖNDERİLMEZ — Faz 7).
+ * İzin vermiş müşteri cihazlarına "randevun onaylandı 🎉" düşer.
+ */
+export async function notifyConfirmed(appointmentId: string): Promise<void> {
+  try {
+    const appt = await fetchAppointment(appointmentId);
+    if (!appt) return;
+    const subs = await getCustomerSubscriptions(appointmentId);
+    if (!subs.length) return;
+    const trackUrl = buildTrackingLink(appt.id, appt.startsAtISO);
+    await pushToSubscriptions(subs, customerConfirmedPush(customerData(appt), trackUrl));
+  } catch (err) {
+    console.error("notifyConfirmed:", err);
+  }
+}
+
+/**
+ * İPTAL/RED (elle): müşteriye e-posta (adresi varsa — mevcut davranış) VE
+ * izin vermiş cihazlarına push. Zaman aşımı buraya GİRMEZ (o push-only,
+ * aşağıdaki notifyTimedOut) — e-posta akışı aynen korunur.
+ */
 export async function notifyCancelled(appointmentId: string): Promise<void> {
   try {
     const appt = await fetchAppointment(appointmentId);
-    if (!appt?.customerEmail) return;
-    await sendEmail({ to: appt.customerEmail, ...cancelledEmail(appt) });
+    if (!appt) return;
+
+    // 1) E-POSTA (mevcut davranış — DEĞİŞMEDİ): adresi varsa iptal maili.
+    if (appt.customerEmail) {
+      await sendEmail({ to: appt.customerEmail, ...cancelledEmail(appt) });
+    }
+
+    // 2) PUSH (yeni): izin vermiş müşteri cihazlarına.
+    const subs = await getCustomerSubscriptions(appointmentId);
+    if (subs.length) {
+      const trackUrl = buildTrackingLink(appt.id, appt.startsAtISO);
+      const timedOut = appt.cancelReason === "timeout";
+      await pushToSubscriptions(
+        subs,
+        customerCancelledPush(customerData(appt), trackUrl, timedOut),
+      );
+    }
   } catch (err) {
     console.error("notifyCancelled:", err);
+  }
+}
+
+/**
+ * ZAMAN AŞIMI: yalnızca PUSH — usta süresinde dönemedi, talep otomatik kapandı.
+ * E-postaya DOKUNMAZ (zaman aşımında hiç mail atılmıyordu, öyle kalıyor).
+ * Sadece cron süpürmesinden çağrılır (müşteri sayfayı açıksa zaten görür).
+ */
+export async function notifyTimedOut(appointmentId: string): Promise<void> {
+  try {
+    const appt = await fetchAppointment(appointmentId);
+    if (!appt) return;
+    const subs = await getCustomerSubscriptions(appointmentId);
+    if (!subs.length) return;
+    const trackUrl = buildTrackingLink(appt.id, appt.startsAtISO);
+    await pushToSubscriptions(subs, customerCancelledPush(customerData(appt), trackUrl, true));
+  } catch (err) {
+    console.error("notifyTimedOut:", err);
   }
 }
 
