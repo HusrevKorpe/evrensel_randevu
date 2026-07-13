@@ -1,13 +1,30 @@
-import { Clock, Phone, StickyNote } from "lucide-react";
+import { CalendarDays, Clock, Phone, StickyNote } from "lucide-react";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
-import { formatClock, telHref } from "@/lib/format";
+import { formatClock, formatDateShort, telHref } from "@/lib/format";
 import type { AdminAppointment } from "@/lib/admin/data";
 
-/** Tek bir randevunun detay kartı + duruma göre işlem butonları. */
-export function AppointmentCard({ appointment: a }: { appointment: AdminAppointment }) {
+/**
+ * Tek bir randevunun detay kartı + duruma göre işlem butonları.
+ *
+ * `showDate`: kart tek bir güne ait listede değil de (ör. panelde "onay bekleyen"
+ * karışık günler) gösteriliyorsa tarihi de yazar — yoksa yalnızca saat yeterli.
+ */
+export function AppointmentCard({
+  appointment: a,
+  showDate = false,
+}: {
+  appointment: AdminAppointment;
+  showDate?: boolean;
+}) {
   return (
     <article className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      {showDate && (
+        <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-brand">
+          <CalendarDays className="size-4" />
+          {formatDateShort(a.starts_at)}
+        </p>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-1.5 font-mono text-sm font-semibold tabular-nums">
           <Clock className="size-4 text-brand" />

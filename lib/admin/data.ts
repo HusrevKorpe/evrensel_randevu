@@ -104,6 +104,32 @@ export async function getAppointmentsInRange(
 }
 
 /**
+ * ONAY BEKLEYEN (pending) tüm randevular — tarih fark etmeksizin, başlangıcı
+ * şu andan SONRA olanlar, en yakından uzağa sıralı.
+ *
+ * Neden ayrı? Dashboard ve Randevular sayfası yalnızca "seçili günü" gösterir;
+ * oysa onay bekleyen talepler çoğunlukla İLERİ tarihli. Berber e-posta alıp
+ * panele girince, hangi güne ait olduğunu bilmeden hepsini tek yerde görüp
+ * onaylayabilsin diye tarihten bağımsız çekilir.
+ */
+export async function getPendingAppointments(): Promise<AdminAppointment[]> {
+  const supabase = await createClient();
+  const nowISO = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(APPOINTMENT_SELECT)
+    .eq("status", "pending")
+    .gte("starts_at", nowISO)
+    .order("starts_at", { ascending: true });
+
+  if (error) {
+    console.error("getPendingAppointments:", error.message);
+    return [];
+  }
+  return ((data ?? []) as Row[]).map(toAdminAppointment);
+}
+
+/**
  * GEÇMİŞ randevular: başlangıcı şu andan önce olan TÜM kayıtlar (iptal ve
  * gelmeyenler dahil), en yeniden eskiye, sayfalı.
  *

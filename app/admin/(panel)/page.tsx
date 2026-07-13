@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Clock } from "lucide-react";
+import { BellRing, CalendarDays, ChevronRight, Clock } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
-import { dayRangeUtc, getAppointmentsInRange } from "@/lib/admin/data";
+import {
+  dayRangeUtc,
+  getAppointmentsInRange,
+  getPendingAppointments,
+} from "@/lib/admin/data";
 import { PageHeader } from "@/components/admin/page-header";
+import { AppointmentCard } from "@/components/admin/appointment-card";
 import { StaffPush } from "@/components/admin/staff-push";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatClock, formatDateLong } from "@/lib/format";
@@ -18,12 +23,13 @@ export const metadata: Metadata = { title: "Panel" };
 export default async function DashboardPage() {
   const { startISO, endISO } = dayRangeUtc(); // bugün (İstanbul)
 
-  // Auth kontrolü ile veri çekme birbirinden BAĞIMSIZ iki Supabase gidiş-dönüşü.
-  // Sırayla beklemek yerine PARALEL çalıştır (biri diğerini bekletmesin).
+  // Auth kontrolü, bugünün özeti ve "onay bekleyen (tüm günler)" listesi
+  // birbirinden BAĞIMSIZ → sırayla beklemek yerine PARALEL çalıştır.
   // Giriş yoksa requireAdmin yönlendirir → veri hiç render edilmez, sızıntı olmaz.
-  const [, all] = await Promise.all([
+  const [, all, pending] = await Promise.all([
     requireAdmin(),
     getAppointmentsInRange(startISO, endISO),
+    getPendingAppointments(),
   ]);
   const active = all.filter((a) => a.status !== "cancelled");
 
@@ -51,6 +57,25 @@ export default async function DashboardPage() {
       />
 
       <StaffPush />
+
+      {/* ONAY BEKLEYEN — tarih fark etmeksizin tüm pending talepler. Berberin
+          panele girince yapması gereken 1 numaralı iş, o yüzden en üstte. */}
+      {pending.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <BellRing className="size-4 text-brand" />
+            <h2 className="font-heading font-semibold">Onay bekleyen randevular</h2>
+            <span className="rounded-full bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand tabular-nums">
+              {pending.length}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {pending.map((a) => (
+              <AppointmentCard key={a.id} appointment={a} showDate />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Bugün toplam" value={counts.total} />

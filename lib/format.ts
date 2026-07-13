@@ -44,6 +44,16 @@ export function formatDateLong(iso: string): string {
   }).format(new Date(iso));
 }
 
+/** UTC timestamp → "Perşembe, 17 Temmuz" (dükkan yerel, kısa — yıl yok). */
+export function formatDateShort(iso: string): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(iso));
+}
+
 /** "+90 216 555 12 34" → "tel:+902165551234" */
 export function telHref(phone: string): string {
   return `tel:${phone.replace(/[^\d+]/g, "")}`;
