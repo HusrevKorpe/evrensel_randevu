@@ -17,12 +17,16 @@ import { cn } from "@/lib/utils";
  *  2. Sayfa kaydırılınca arka planın belirginleşmesi (scroll dinleyici)
  */
 
+// Not: hedefler MUTLAK (`/#...`) — çapa linkleri (`#...`) yalnız ana sayfada
+// çalışırdı; onay/durum gibi alt sayfalarda hem menü hem logo ölürdü. Mutlak
+// verince alt sayfadan önce ana sayfaya gidip ilgili bölüme kayar; ana sayfada
+// ise (scroll-smooth html'de olduğu için) yine yumuşak kaydırma yapar.
 const NAV = [
-  { href: "#hizmetler", label: "Hizmetler" },
-  { href: "#hakkimizda", label: "Hakkımızda" },
-  { href: "#ekip", label: "Ekip" },
-  { href: "#galeri", label: "Galeri" },
-  { href: "#iletisim", label: "İletişim" },
+  { href: "/#hizmetler", label: "Hizmetler" },
+  { href: "/#hakkimizda", label: "Hakkımızda" },
+  { href: "/#ekip", label: "Ekip" },
+  { href: "/#galeri", label: "Galeri" },
+  { href: "/#iletisim", label: "İletişim" },
 ];
 
 export function SiteHeader() {
@@ -46,9 +50,9 @@ export function SiteHeader() {
       )}
     >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        {/* Logo */}
+        {/* Logo — her sayfadan ana sayfaya götürür (alt sayfalarda "#top" ölürdü). */}
         <Link
-          href="#top"
+          href="/#top"
           className="flex items-center gap-2"
           onClick={() => setOpen(false)}
         >

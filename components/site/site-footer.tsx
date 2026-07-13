@@ -4,12 +4,14 @@ import { InstagramIcon } from "@/components/site/instagram-icon";
 import { telHref } from "@/lib/format";
 import { siteConfig } from "@/lib/site";
 
+// Header'daki menüyle aynı gerekçe: hedefler MUTLAK (`/#...`) — böylece
+// footer alt sayfalarda da (onay/durum) ana sayfanın ilgili bölümüne götürür.
 const NAV = [
-  { href: "#hizmetler", label: "Hizmetler" },
-  { href: "#hakkimizda", label: "Hakkımızda" },
-  { href: "#ekip", label: "Ekip" },
-  { href: "#galeri", label: "Galeri" },
-  { href: "#iletisim", label: "İletişim" },
+  { href: "/#hizmetler", label: "Hizmetler" },
+  { href: "/#hakkimizda", label: "Hakkımızda" },
+  { href: "/#ekip", label: "Ekip" },
+  { href: "/#galeri", label: "Galeri" },
+  { href: "/#iletisim", label: "İletişim" },
 ];
 
 export function SiteFooter() {
