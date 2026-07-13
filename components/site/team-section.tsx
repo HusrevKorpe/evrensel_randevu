@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Section, SectionHeading } from "@/components/site/section";
 import type { Barber } from "@/types";
 
@@ -30,9 +31,10 @@ export function TeamSection({ barbers }: { barbers: Barber[] }) {
 
       <div className="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-2">
         {barbers.map((barber) => (
-          <div
+          <Link
             key={barber.id}
-            className="flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center"
+            href="/randevu"
+            className="group flex flex-col items-center rounded-2xl border border-border bg-card p-8 text-center transition-colors hover:border-brand/40"
           >
             <span className="grid size-20 place-items-center rounded-full bg-brand/10 font-heading text-xl font-bold text-brand">
               {initials(barber.name)}
@@ -46,7 +48,7 @@ export function TeamSection({ barbers }: { barbers: Barber[] }) {
             {barber.bio && (
               <p className="mt-3 text-sm text-muted-foreground">{barber.bio}</p>
             )}
-          </div>
+          </Link>
         ))}
       </div>
     </Section>
