@@ -163,6 +163,12 @@ export function BookingWizard({
     setFlash(null);
     setStep(5);
   }
+  // Adım göstergesindeki numaraya basınca YALNIZCA geriye (tamamlanmış
+  // adımlara) gidilir. İleri atlama yok — böylece atlanan adımların seçimi
+  // boş kalmaz. Geri gitmek seçimleri korur (sıfırlamayız).
+  function goToStep(n: number) {
+    if (n < step) setStep(n);
+  }
   function updateDetails(patch: Partial<ContactDraft>) {
     setDetails((prev) => ({ ...prev, ...patch }));
     // Düzeltilen alanın hatasını temizle
@@ -255,7 +261,7 @@ export function BookingWizard({
 
   return (
     <div>
-      <Stepper step={step} />
+      <Stepper step={step} onGoTo={goToStep} />
 
       <div className="mt-6">
         <h1 className="font-heading text-xl font-bold tracking-tight sm:text-2xl">
@@ -341,7 +347,7 @@ export function BookingWizard({
 
 // ── Adım göstergesi ─────────────────────────────────────────────────────
 
-function Stepper({ step }: { step: number }) {
+function Stepper({ step, onGoTo }: { step: number; onGoTo: (n: number) => void }) {
   return (
     <div>
       {/* Mobil: kompakt */}
@@ -369,7 +375,18 @@ function Stepper({ step }: { step: number }) {
           const active = n === step;
           return (
             <li key={label} className="flex flex-1 items-center last:flex-none">
-              <div className="flex items-center gap-2">
+              {/* Tamamlanmış adım → geri dönmek için tıklanabilir.
+                  Aktif/ileri adımlar disabled (ileri atlama yok). */}
+              <button
+                type="button"
+                disabled={!done}
+                onClick={() => onGoTo(n)}
+                aria-label={done ? `${label} adımına dön` : undefined}
+                className={cn(
+                  "flex items-center gap-2 rounded-full text-left transition-opacity",
+                  done ? "cursor-pointer hover:opacity-70" : "cursor-default",
+                )}
+              >
                 <span
                   className={cn(
                     "grid size-7 place-items-center rounded-full text-xs font-semibold transition-colors",
@@ -390,7 +407,7 @@ function Stepper({ step }: { step: number }) {
                 >
                   {label}
                 </span>
-              </div>
+              </button>
               {n < STEP_LABELS.length && (
                 <span
                   className={cn(
