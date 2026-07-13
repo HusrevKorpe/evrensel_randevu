@@ -21,6 +21,7 @@ import { HORIZON_DAYS } from "@/lib/booking/config";
 import { addDaysISO, shopLocalToUtc, shopNow } from "@/lib/booking/time";
 import { validateContact, type ContactErrors } from "@/lib/booking/validate";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 // ── Uygun saatleri getir ───────────────────────────────────────────────
 
@@ -34,6 +35,14 @@ export async function fetchSlotsAction(input: {
   dateISO: string;
 }): Promise<SlotsResult> {
   try {
+    // Hız freni: saat sorgusu göz atarken sık çağrılır, o yüzden cömert
+    // (IP başına 60/dk). Amaç normal kullanımı engellemek değil, ucu döngüde
+    // dövmeyi durdurmak.
+    const rl = rateLimit(`slots:${await clientIp()}`, 60, 60_000);
+    if (!rl.ok) {
+      return { ok: false, error: "Çok fazla istek. Lütfen biraz sonra tekrar dene." };
+    }
+
     // Tarih ufku dışındaki istekleri boş dön.
     const { dateISO: today } = shopNow();
     if (input.dateISO < today || input.dateISO > addDaysISO(today, HORIZON_DAYS)) {
@@ -72,6 +81,17 @@ export type CreateResult =
 export async function createAppointmentAction(
   input: CreateInput,
 ): Promise<CreateResult> {
+  // 0) Hız freni (IP başına): asıl spam yüzeyi burasıdır. Meşru kullanıcı
+  //    10 dakikada 10 kez randevu oluşturmaz; script'li seli durdurur.
+  const ipLimit = rateLimit(`book-ip:${await clientIp()}`, 10, 10 * 60_000);
+  if (!ipLimit.ok) {
+    return {
+      ok: false,
+      code: "error",
+      message: "Çok fazla deneme yaptın. Lütfen birkaç dakika sonra tekrar dene.",
+    };
+  }
+
   // 1) İletişim bilgisi doğrula + temizle
   const contact = validateContact(input);
   if (!contact.ok) {
@@ -80,6 +100,17 @@ export async function createAppointmentAction(
       code: "invalid",
       message: "Lütfen bilgileri kontrol et.",
       fieldErrors: contact.errors,
+    };
+  }
+
+  // 1b) Hız freni (telefon başına): IP döndürülse bile aynı numarayla
+  //     seri randevuyu sınırla (saatte 5). Numara doğrulanıp normalize edildi.
+  const phoneLimit = rateLimit(`book-phone:${contact.value.phone}`, 5, 60 * 60_000);
+  if (!phoneLimit.ok) {
+    return {
+      ok: false,
+      code: "error",
+      message: "Bu numarayla çok fazla randevu oluşturdun. Lütfen daha sonra tekrar dene.",
     };
   }
 
