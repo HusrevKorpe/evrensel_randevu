@@ -1,12 +1,19 @@
 import type { NextRequest } from "next/server";
 import { sendPendingNags } from "@/lib/notifications/appointments";
+import { expirePendingAppointments } from "@/lib/booking/customer-status";
 
 /**
- * BEKLEYEN RANDEVU DÜRTMESİ — GET /api/cron/reminders
+ * BEKLEYEN RANDEVU BAKIMI — GET /api/cron/reminders
  *
- * (Faz 5'te müşteriye hatırlatma atıyordu; Faz 7 kararıyla görevi değişti:
- * artık yanıtlanmamış `pending` randevuları BERBERE hatırlatır. URL,
- * vercel.json'daki cron tanımı bozulmasın diye aynı kaldı.)
+ * İki iş yapar:
+ *   1) ZAMAN AŞIMI SÜPÜRMESİ: süresi geçmiş `pending` randevuları otomatik
+ *      iptal eder (yumuşak, cancel_reason='timeout') → slotları serbest bırakır.
+ *      Sayfayı AÇAN müşteri için bu zaten anında olur (tembel expire); bu adım
+ *      açmayanları temizler. Önce bunu yaparız ki dürtmeye onları KATMAYALIM.
+ *   2) DÜRTME: hâlâ bekleyen (süresi dolmamış) randevuları BERBERE hatırlatır.
+ *
+ * (Faz 5'te müşteriye hatırlatma atıyordu; Faz 7'de berber-dürtmesine döndü.
+ * URL, vercel.json'daki cron tanımı bozulmasın diye aynı kaldı.)
  *
  * Vercel Cron bu adresi zamanlanmış olarak çağırır (vercel.json > crons).
  * Vercel, projede CRON_SECRET ortam değişkeni tanımlıysa isteğe otomatik
@@ -30,6 +37,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // 1) Önce süresi geçmişleri temizle, 2) kalanları berbere hatırlat.
+  const swept = await expirePendingAppointments();
   const result = await sendPendingNags();
-  return Response.json(result, { status: result.ok ? 200 : 500 });
+  return Response.json(
+    { ...result, expired: swept.expired },
+    { status: result.ok ? 200 : 500 },
+  );
 }

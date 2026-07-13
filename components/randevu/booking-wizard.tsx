@@ -74,6 +74,7 @@ export function BookingWizard({
   const [result, setResult] = React.useState<{
     reference: string;
     barberName: string;
+    trackUrl: string | null;
   } | null>(null);
 
   const selectedService = services.find((s) => s.id === serviceId) ?? null;
@@ -185,7 +186,11 @@ export function BookingWizard({
         notes: details.notes,
       });
       if (res.ok) {
-        setResult({ reference: res.reference, barberName: res.barberName });
+        setResult({
+          reference: res.reference,
+          barberName: res.barberName,
+          trackUrl: res.trackUrl,
+        });
         return;
       }
       if (res.code === "slot_taken") {
@@ -231,6 +236,7 @@ export function BookingWizard({
         barberName={result.barberName}
         dayLong={selectedDay.long}
         time={time}
+        trackUrl={result.trackUrl}
         onReset={reset}
       />
     );

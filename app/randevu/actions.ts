@@ -16,6 +16,7 @@ import {
   type BarberChoice,
 } from "@/lib/booking/availability";
 import { notifyCreated } from "@/lib/notifications/appointments";
+import { buildTrackingLink } from "@/lib/notifications/approval-token";
 import { HORIZON_DAYS } from "@/lib/booking/config";
 import { addDaysISO, shopLocalToUtc, shopNow } from "@/lib/booking/time";
 import { validateContact, type ContactErrors } from "@/lib/booking/validate";
@@ -60,7 +61,7 @@ export type CreateInput = {
 };
 
 export type CreateResult =
-  | { ok: true; reference: string; barberName: string }
+  | { ok: true; reference: string; barberName: string; trackUrl: string | null }
   | {
       ok: false;
       code: "invalid" | "slot_taken" | "error";
@@ -169,5 +170,7 @@ export async function createAppointmentAction(
 
   // İnsan-dostu referans: UUID'nin ilk 8 hanesi. Örn. "A1B2C3D4"
   const reference = (created.id as string).slice(0, 8).toUpperCase();
-  return { ok: true, reference, barberName: barber?.name ?? "Ustanız" };
+  // Müşteri durumunu canlı izleyebilsin: imzalı takip linki.
+  const trackUrl = buildTrackingLink(created.id as string, startsAt.toISOString());
+  return { ok: true, reference, barberName: barber?.name ?? "Ustanız", trackUrl };
 }

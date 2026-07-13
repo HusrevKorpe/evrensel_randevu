@@ -19,13 +19,17 @@ import { siteConfig } from "@/lib/site";
  * kendine onaylanırdı.
  */
 
-function hmacKey(): string | null {
+/**
+ * Amaca göre HMAC anahtarı. Etiket ("approval" / "status") sabit önek olur ki
+ * bir amaç için üretilen imza başka amaçta GEÇMESİN (onay token'ı ile durum
+ * token'ı birbirinin yerine kullanılamaz). "approval-link:" öneki geriye
+ * uyumluluk için AYNEN korunur — dolaşımdaki onay linkleri bozulmasın.
+ */
+function hmacKey(purpose: "approval" | "status"): string | null {
   const secret =
     process.env.APPROVAL_LINK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!secret) return null;
-  // Sabit etiketle türetiyoruz ki aynı sır başka amaçla HMAC'lense bile
-  // imzalar birbirinin yerine geçemesin.
-  return `approval-link:${secret}`;
+  return `${purpose}-link:${secret}`;
 }
 
 function sign(payload: string, key: string): string {
@@ -41,7 +45,7 @@ export function createApprovalToken(
   appointmentId: string,
   expUnix: number,
 ): string | null {
-  const key = hmacKey();
+  const key = hmacKey("approval");
   if (!key) return null;
   const payload = `${appointmentId}.${expUnix}`;
   return `${payload}.${sign(payload, key)}`;
@@ -53,7 +57,12 @@ export type TokenCheck =
 
 /** Token'ı doğrular: imza sağlam mı + süresi geçmiş mi. */
 export function verifyApprovalToken(token: string): TokenCheck {
-  const key = hmacKey();
+  return verifyToken(token, "approval");
+}
+
+/** Ortak doğrulayıcı — amaç etiketine göre imzayı ve süreyi kontrol eder. */
+function verifyToken(token: string, purpose: "approval" | "status"): TokenCheck {
+  const key = hmacKey(purpose);
   if (!key) return { ok: false, reason: "invalid" };
 
   const parts = token.split(".");
@@ -91,4 +100,39 @@ export function buildApprovalLinks(
   if (!token) return null;
   const base = `${siteConfig.url}/randevu/onay?token=${encodeURIComponent(token)}`;
   return { approveUrl: `${base}&islem=onayla`, rejectUrl: `${base}&islem=reddet` };
+}
+
+// ── MÜŞTERİ DURUM TAKİBİ ─────────────────────────────────────────────────
+//
+// Müşteri, randevu sonrası verilen imzalı linkle randevusunun durumunu (yalnız
+// OKUMA) canlı takip eder. Onay token'ından AYRI amaç ("status") ile imzalanır:
+// durum linki asla onay/red yapamaz. Süresi randevudan 2 gün sonrasına kadar —
+// müşteri sonucu bir süre daha görebilsin.
+
+/** Müşteri durum-takip token'ı; anahtar yoksa null. */
+export function createStatusToken(
+  appointmentId: string,
+  expUnix: number,
+): string | null {
+  const key = hmacKey("status");
+  if (!key) return null;
+  const payload = `${appointmentId}.${expUnix}`;
+  return `${payload}.${sign(payload, key)}`;
+}
+
+/** Durum token'ını doğrular (imza + süre). */
+export function verifyStatusToken(token: string): TokenCheck {
+  return verifyToken(token, "status");
+}
+
+/** Müşteriye verilecek mutlak takip linki (`/randevu/durum?token=...`); anahtar yoksa null. */
+export function buildTrackingLink(
+  appointmentId: string,
+  startsAtISO: string,
+): string | null {
+  const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
+  const exp = Math.floor((new Date(startsAtISO).getTime() + twoDaysMs) / 1000);
+  const token = createStatusToken(appointmentId, exp);
+  if (!token) return null;
+  return `${siteConfig.url}/randevu/durum?token=${encodeURIComponent(token)}`;
 }

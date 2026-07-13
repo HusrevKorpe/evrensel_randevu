@@ -73,6 +73,23 @@ export interface TimeOff {
   created_at: Timestamp;
 }
 
+/**
+ * Müşteriye canlı takip sayfasında gösterilen durum özeti.
+ * Server Action üzerinden istemciye döner → yalnızca müşterinin ZATEN gördüğü
+ * (kendi randevusuna ait) alanlar; ekstra PII yok.
+ */
+export interface CustomerStatusView {
+  status: AppointmentStatus;
+  /** İptal, ustanın süresinde yanıtlamamasından (otomatik) mı kaynaklandı? */
+  timedOut: boolean;
+  serviceName: string;
+  barberName: string;
+  startsAtISO: Timestamp;
+  reference: string;
+  /** Hâlâ bekliyorsa: "en geç bu ana kadar onaylanır" (aksi halde null). */
+  deadlineISO: Timestamp | null;
+}
+
 /** Randevu */
 export interface Appointment {
   id: UUID;

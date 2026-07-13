@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Clock,
   Phone,
+  Radar,
   Scissors,
   User,
 } from "lucide-react";
@@ -115,6 +116,7 @@ export function SuccessView({
   barberName,
   dayLong,
   time,
+  trackUrl,
   onReset,
 }: {
   reference: string;
@@ -122,6 +124,7 @@ export function SuccessView({
   barberName: string;
   dayLong: string;
   time: string;
+  trackUrl: string | null;
   onReset: () => void;
 }) {
   return (
@@ -134,8 +137,8 @@ export function SuccessView({
       </h1>
       <p className="mt-2 max-w-sm text-muted-foreground text-balance">
         {dayLong} · {time} · {barberName}. Talebini aldık ve bu saati senin için
-        tuttuk. Ustan onayladıktan sonra randevun kesinleşir; gerekirse dükkân
-        seninle iletişime geçer.
+        tuttuk. Ustan onayladıktan sonra randevun kesinleşir; sonucu aşağıdaki
+        bağlantıdan canlı takip edebilirsin.
       </p>
 
       {/* Referans numarası */}
@@ -150,11 +153,24 @@ export function SuccessView({
       </div>
 
       <div className="mt-8 flex w-full max-w-xs flex-col gap-2.5">
+        {trackUrl && (
+          <Link
+            href={trackUrl}
+            className={cn(
+              buttonVariants(),
+              "h-11 bg-brand text-brand-foreground hover:bg-brand/90",
+            )}
+          >
+            <Radar className="size-4" />
+            Randevu durumunu takip et
+          </Link>
+        )}
         <Link
           href="/"
           className={cn(
-            buttonVariants(),
-            "h-11 bg-brand text-brand-foreground hover:bg-brand/90",
+            buttonVariants({ variant: trackUrl ? "outline" : "default" }),
+            "h-11",
+            !trackUrl && "bg-brand text-brand-foreground hover:bg-brand/90",
           )}
         >
           Anasayfaya dön
@@ -167,6 +183,13 @@ export function SuccessView({
           Yeni randevu al
         </button>
       </div>
+
+      {trackUrl && (
+        <p className="mt-4 max-w-xs text-xs text-muted-foreground text-balance">
+          💡 İpucu: Bu bağlantıyı kaydet (ekran görüntüsü al veya yer imine
+          ekle) — onaylanınca oradan görebilirsin.
+        </p>
+      )}
     </div>
   );
 }
