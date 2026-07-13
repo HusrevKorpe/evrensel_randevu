@@ -56,7 +56,7 @@ function nameOf(rel: Row["service"]): string {
  * (ara tablo) → adları birleştirilir. `barber` = usta adı.
  */
 const APPOINTMENT_SELECT =
-  "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)";
+  "id, barber_id, starts_at, ends_at, status, customer_name, customer_phone, customer_email, notes, service:services!appointments_service_id_fkey(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)";
 
 /** Ham satırı panel randevusuna çevirir (gömülü ilişkileri düzleştirir). */
 function toAdminAppointment(r: Row): AdminAppointment {

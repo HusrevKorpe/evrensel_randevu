@@ -60,7 +60,7 @@ export async function resolveCustomerStatus(
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, barber_id, created_at, starts_at, status, cancel_reason, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)",
+      "id, barber_id, created_at, starts_at, status, cancel_reason, service:services!appointments_service_id_fkey(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(name)",
     )
     .eq("id", appointmentId)
     .maybeSingle();

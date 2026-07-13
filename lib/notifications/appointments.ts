@@ -67,7 +67,7 @@ export async function fetchAppointment(
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, starts_at, status, cancel_reason, customer_name, customer_phone, customer_email, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
+      "id, starts_at, status, cancel_reason, customer_name, customer_phone, customer_email, notes, service:services!appointments_service_id_fkey(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -234,7 +234,7 @@ export async function sendPendingNags(): Promise<NagRunResult> {
   const { data, error } = await admin
     .from("appointments")
     .select(
-      "id, starts_at, customer_name, customer_phone, notes, service:services(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
+      "id, starts_at, customer_name, customer_phone, notes, service:services!appointments_service_id_fkey(name), service_items:appointment_services(services(name, sort_order)), barber:barbers(id, name, email)",
     )
     .eq("status", "pending")
     .gt("starts_at", new Date().toISOString())
