@@ -79,7 +79,7 @@ export default async function AppointmentsPage({
       ) : (
         <div className="space-y-3">
           {list.map((a) => (
-            <AppointmentCard key={a.id} appointment={a} />
+            <AppointmentCard key={a.id} appointment={a} showDate />
           ))}
         </div>
       )}
