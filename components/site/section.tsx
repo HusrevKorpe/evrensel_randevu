@@ -33,14 +33,14 @@ export function SectionHeading({
   title,
   description,
   align = "center",
-  eyebrowLine = true,
+  eyebrowLine = false,
   className,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   align?: "center" | "left";
-  /** Üst etiketin solundaki kısa çizgiyi göster (varsayılan: göster). */
+  /** Üst etiketin solundaki kısa çizgiyi göster (varsayılan: gösterme). */
   eyebrowLine?: boolean;
   className?: string;
 }) {
