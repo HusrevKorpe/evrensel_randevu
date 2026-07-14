@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
@@ -8,14 +8,18 @@ import {
   CalendarX2,
   CheckCircle2,
   Hourglass,
+  Loader2,
   Phone,
+  X,
 } from "lucide-react";
 import {
+  cancelOwnAppointment,
   checkAppointmentStatus,
   removePushSubscription,
   savePushSubscription,
 } from "@/app/randevu/durum/actions";
 import { PushOptin } from "@/components/pwa/push-optin";
+import { Button } from "@/components/ui/button";
 import { formatClock, formatDateLong, telHref } from "@/lib/format";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -40,6 +44,9 @@ export function StatusTracker({
   initial: CustomerStatusView;
 }) {
   const [view, setView] = useState<CustomerStatusView>(initial);
+  // Müşteri iptal düğmesiyle kendi iptal ettiyse: "iptal edildi" yerine
+  // ona özel (suçlamasız) bir teşekkür/onay mesajı göstermek için işaret.
+  const [selfCancelled, setSelfCancelled] = useState(false);
 
   const refresh = useCallback(async () => {
     const res = await checkAppointmentStatus(token);
@@ -65,12 +72,32 @@ export function StatusTracker({
     };
   }, [refresh, view.status]);
 
-  return <StatusCard view={view} token={token} />;
+  return (
+    <StatusCard
+      view={view}
+      token={token}
+      selfCancelled={selfCancelled}
+      onCancelled={(v) => {
+        setSelfCancelled(true);
+        setView(v);
+      }}
+    />
+  );
 }
 
 // ── Duruma göre kart ────────────────────────────────────────────────────
 
-function StatusCard({ view, token }: { view: CustomerStatusView; token: string }) {
+function StatusCard({
+  view,
+  token,
+  selfCancelled,
+  onCancelled,
+}: {
+  view: CustomerStatusView;
+  token: string;
+  selfCancelled: boolean;
+  onCancelled: (view: CustomerStatusView) => void;
+}) {
   const summary = (
     <AppointmentSummary
       serviceName={view.serviceName}
@@ -107,6 +134,7 @@ function StatusCard({ view, token }: { view: CustomerStatusView; token: string }
           // Şeritten önceden izin verildiyse hazır aboneliği bu randevuya bağla.
           rebindOnLoad
         />
+        <CancelButton token={token} onCancelled={onCancelled} />
       </Shell>
     );
   }
@@ -121,6 +149,22 @@ function StatusCard({ view, token }: { view: CustomerStatusView; token: string }
         text="Ustan talebini onayladı — seni bekliyoruz. Görüşmek üzere!"
       >
         {summary}
+        <CancelButton token={token} onCancelled={onCancelled} />
+      </Shell>
+    );
+  }
+
+  // 2.5) Müşteri kendisi iptal etti — suçlamasız, teşekkürlü mesaj.
+  if (view.status === "cancelled" && selfCancelled) {
+    return (
+      <Shell
+        tone="soft"
+        icon={<CalendarX2 className="size-7 text-muted-foreground" />}
+        title="Randevunu iptal ettin"
+        text="Randevun iptal edildi ve o saat tekrar boşaldı — haber verdiğin için teşekkürler. Fikrin değişirse aşağıdan yeni bir randevu alabilirsin."
+      >
+        {summary}
+        <CallCta />
       </Shell>
     );
   }
@@ -170,6 +214,81 @@ function StatusCard({ view, token }: { view: CustomerStatusView; token: string }
     >
       {summary}
     </Shell>
+  );
+}
+
+/**
+ * Müşterinin kendi randevusunu iptal ettiği düğme. Yanlışlıkla iptali önlemek
+ * için iki adımlı: önce "İptal et" bağlantısı, sonra inline onay kutusu.
+ * Başarılıysa üst bileşene güncel görünümü bildirir (kart "iptal edildi"ye döner).
+ */
+function CancelButton({
+  token,
+  onCancelled,
+}: {
+  token: string;
+  onCancelled: (view: CustomerStatusView) => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function doCancel() {
+    setError(null);
+    startTransition(async () => {
+      const res = await cancelOwnAppointment(token);
+      if (res.ok) onCancelled(res.view);
+      else setError(res.message);
+    });
+  }
+
+  if (!confirming) {
+    return (
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-destructive hover:underline"
+        >
+          Gelemeyecek misin? Randevunu iptal et
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/[0.04] p-4 text-center">
+      <p className="text-sm font-medium">Randevunu iptal etmek istediğine emin misin?</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        İptal edince bu saat başkalarına açılır ve geri alınamaz.
+      </p>
+      <div className="mt-3 flex justify-center gap-2">
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          disabled={pending}
+          onClick={doCancel}
+        >
+          {pending ? <Loader2 className="animate-spin" /> : <X />}
+          Evet, iptal et
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={pending}
+          onClick={() => setConfirming(false)}
+        >
+          Vazgeç
+        </Button>
+      </div>
+      {error && (
+        <p className="mt-2 text-xs text-destructive" aria-live="polite">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/notifications/email";
 import { buildApprovalLinks, buildTrackingLink } from "@/lib/notifications/approval-token";
 import {
   cancelledEmail,
+  customerCancelledBarberEmail,
   newBookingBarberEmail,
   pendingNagEmail,
   type AppointmentEmailData,
@@ -17,6 +18,7 @@ import {
 import {
   customerCancelledPush,
   customerConfirmedPush,
+  staffCustomerCancelledPush,
   staffNewBookingPush,
 } from "@/lib/notifications/push-templates";
 import {
@@ -207,6 +209,37 @@ export async function notifyTimedOut(appointmentId: string): Promise<void> {
     await pushToSubscriptions(subs, customerCancelledPush(customerData(appt), trackUrl, true));
   } catch (err) {
     console.error("notifyTimedOut:", err);
+  }
+}
+
+/**
+ * MÜŞTERİ KENDİ İPTAL ETTİ: yalnızca BERBERE haber (e-posta + push) — o saatin
+ * boşaldığını bilsin. Müşteriye bildirim yok (iptali kendi yaptı, zaten biliyor).
+ * `after()` içinden çağrılır; hata randevuyu/iptali ASLA bozmaz.
+ */
+export async function notifyCustomerCancelled(appointmentId: string): Promise<void> {
+  try {
+    const appt = await fetchAppointment(appointmentId);
+    if (!appt) return;
+
+    // 1) E-POSTA: atanan berbere (yoksa sahibine).
+    await sendEmail({
+      to: appt.barberEmail || adminEmail(),
+      ...customerCancelledBarberEmail(appt),
+    });
+
+    // 2) PUSH: izin vermiş berber/sahip cihazlarına.
+    if (appt.barberId) {
+      const subs = await getStaffSubscriptions(appt.barberId);
+      if (subs.length) {
+        await pushToSubscriptions(
+          subs,
+          staffCustomerCancelledPush({ customerName: appt.customerName, ...customerData(appt) }),
+        );
+      }
+    }
+  } catch (err) {
+    console.error("notifyCustomerCancelled:", err);
   }
 }
 

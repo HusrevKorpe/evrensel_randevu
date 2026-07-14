@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, CalendarDays, ChevronRight, Clock } from "lucide-react";
+import { BellRing, CalendarDays, CalendarPlus, ChevronRight, Clock } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import {
   dayRangeUtc,
   getAppointmentsInRange,
+  getCustomerHistories,
   getPendingAppointments,
 } from "@/lib/admin/data";
+import { isShopClosedRestOfToday } from "@/app/admin/(panel)/actions";
 import { PageHeader } from "@/components/admin/page-header";
 import { AppointmentCard } from "@/components/admin/appointment-card";
+import { CloseTodayButton } from "@/components/admin/close-today-button";
 import { StaffPush } from "@/components/admin/staff-push";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatClock, formatDateLong } from "@/lib/format";
@@ -26,12 +29,17 @@ export default async function DashboardPage() {
   // Auth kontrolü, bugünün özeti ve "onay bekleyen (tüm günler)" listesi
   // birbirinden BAĞIMSIZ → sırayla beklemek yerine PARALEL çalıştır.
   // Giriş yoksa requireAdmin yönlendirir → veri hiç render edilmez, sızıntı olmaz.
-  const [, all, pending] = await Promise.all([
+  const [, all, pending, closedToday] = await Promise.all([
     requireAdmin(),
     getAppointmentsInRange(startISO, endISO),
     getPendingAppointments(),
+    isShopClosedRestOfToday(),
   ]);
   const active = all.filter((a) => a.status !== "cancelled");
+
+  // Onay bekleyen taleplerdeki telefonların geçmişi (kaç kez geldi/gelmedi) →
+  // berber onaylamadan önce riskli/sadık müşteriyi görsün. Tek toplu sorgu.
+  const histories = await getCustomerHistories(pending.map((a) => a.customer_phone));
 
   const counts = {
     total: active.length,
@@ -46,17 +54,28 @@ export default async function DashboardPage() {
         title="Panel"
         description={`Bugün — ${formatDateLong(startISO)}`}
         action={
-          <Link
-            href="/admin/randevular"
-            className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline"
-          >
-            Tüm randevular
-            <ChevronRight className="size-4" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/randevular"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline"
+            >
+              Tüm randevular
+              <ChevronRight className="size-4" />
+            </Link>
+            <Link
+              href="/admin/randevu-ekle"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90"
+            >
+              <CalendarPlus className="size-4" />
+              Yeni Randevu
+            </Link>
+          </div>
         }
       />
 
       <StaffPush />
+
+      <CloseTodayButton initialClosed={closedToday} />
 
       {/* ONAY BEKLEYEN — tarih fark etmeksizin tüm pending talepler. Berberin
           panele girince yapması gereken 1 numaralı iş, o yüzden en üstte. */}
@@ -71,7 +90,12 @@ export default async function DashboardPage() {
           </div>
           <div className="space-y-3">
             {pending.map((a) => (
-              <AppointmentCard key={a.id} appointment={a} showDate />
+              <AppointmentCard
+                key={a.id}
+                appointment={a}
+                showDate
+                history={histories.get(a.customer_phone)}
+              />
             ))}
           </div>
         </section>

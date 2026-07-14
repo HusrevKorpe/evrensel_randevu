@@ -65,3 +65,13 @@ export function staffNewBookingPush(d: StaffPushData): PushPayload {
     tag: `new-${d.reference}`,
   };
 }
+
+/** 🔕 Berbere: müşteri randevusunu iptal etti (o saat boşaldı). */
+export function staffCustomerCancelledPush(d: StaffPushData): PushPayload {
+  return {
+    title: "Randevu iptal edildi",
+    body: `${d.customerName} — ${when(d.startsAtISO)} · bu saat artık boş.`,
+    url: `${siteConfig.url}/admin/randevular`,
+    tag: `cancel-${d.reference}`,
+  };
+}

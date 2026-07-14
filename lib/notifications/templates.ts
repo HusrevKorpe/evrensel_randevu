@@ -140,6 +140,20 @@ export function cancelledEmail(d: AppointmentEmailData): EmailContent {
 // ── Berbere giden şablonlar ──────────────────────────────────────────────
 
 /**
+ * Müşteri kendi randevusunu takip sayfasından iptal etti → berbere bilgi
+ * (o saat artık boş). Sahip/berber panelden de görür ama anında haber almak iyi.
+ */
+export function customerCancelledBarberEmail(d: AppointmentEmailData): EmailContent {
+  const title = "Müşteri randevusunu iptal etti";
+  const text = `${d.customerName}, randevusunu iptal etti — bu saat artık boş. Bilgin olsun.`;
+  return {
+    subject: `İptal: ${d.customerName} — ${when(d)}`,
+    html: shell(title, intro(text) + detailTable(d, true)),
+    text: plainText(title, text, d, true),
+  };
+}
+
+/**
  * Berbere yeni randevu talebi. `links` varsa tek tıkla onay/red butonları
  * eklenir; yoksa (imza anahtarı tanımsız) panele yönlendiren metin kalır.
  */

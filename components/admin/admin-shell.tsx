@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  CalendarPlus,
   CalendarRange,
   History,
   LayoutDashboard,
@@ -133,6 +134,19 @@ function SidebarContent({
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
+        {/* Öne çıkan birincil aksiyon: elle randevu ekleme (telefon/kapı) */}
+        <Link
+          href="/admin/randevu-ekle"
+          onClick={onNavigate}
+          className={cn(
+            "mb-2 flex items-center gap-2 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-brand-foreground transition-opacity hover:opacity-90",
+            pathname === "/admin/randevu-ekle" && "ring-2 ring-brand/40",
+          )}
+        >
+          <CalendarPlus className="size-4" />
+          Yeni Randevu
+        </Link>
+
         {NAV.map(({ href, label, icon: Icon, exact }) => {
           const active = exact
             ? pathname === href

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { CalendarX2 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
-import { dayRangeUtc, getAppointmentsInRange } from "@/lib/admin/data";
+import {
+  dayRangeUtc,
+  getAppointmentsInRange,
+  getCustomerHistories,
+} from "@/lib/admin/data";
 import { shopNow } from "@/lib/booking/time";
 import { formatDateLong } from "@/lib/format";
 import { STATUS_ORDER } from "@/lib/admin/status";
@@ -56,6 +60,9 @@ export default async function AppointmentsPage({
 
   const list = status === "all" ? all : all.filter((a) => a.status === status);
 
+  // Listedeki telefonların geçmiş özeti (kaç kez geldi/gelmedi) — tek toplu sorgu.
+  const histories = await getCustomerHistories(list.map((a) => a.customer_phone));
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title="Randevular" description={formatDateLong(startISO)} />
@@ -79,7 +86,12 @@ export default async function AppointmentsPage({
       ) : (
         <div className="space-y-3">
           {list.map((a) => (
-            <AppointmentCard key={a.id} appointment={a} showDate />
+            <AppointmentCard
+              key={a.id}
+              appointment={a}
+              showDate
+              history={histories.get(a.customer_phone)}
+            />
           ))}
         </div>
       )}

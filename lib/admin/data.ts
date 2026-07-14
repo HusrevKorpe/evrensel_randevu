@@ -129,6 +129,54 @@ export async function getPendingAppointments(): Promise<AdminAppointment[]> {
   return ((data ?? []) as Row[]).map(toAdminAppointment);
 }
 
+/** Bir telefon numarasının GEÇMİŞ randevu özeti (berbere karar sinyali). */
+export type CustomerHistory = {
+  /** Tamamlanmış (gelmiş) randevu sayısı → sadık/düzenli müşteri sinyali. */
+  completed: number;
+  /** "Gelmedi" işaretli randevu sayısı → riskli müşteri sinyali. */
+  noShow: number;
+  /** İptal edilmiş geçmiş randevu sayısı. */
+  cancelled: number;
+};
+
+/**
+ * Verilen telefon numaralarının GEÇMİŞ randevu istatistikleri (tek sorguda,
+ * toplu). "Bu numara kaç kez geldi / kaç kez gelmedi" rozetini beslemek için.
+ *
+ * Yalnızca başlangıcı ŞU ANDAN ÖNCE olan randevular sayılır → değerlendirilen
+ * randevunun kendisi (gelecek/bekleyen) sayıya KATILMAZ. Boş liste → boş Map.
+ */
+export async function getCustomerHistories(
+  phones: string[],
+): Promise<Map<string, CustomerHistory>> {
+  const unique = [...new Set(phones)].filter(Boolean);
+  const map = new Map<string, CustomerHistory>();
+  if (unique.length === 0) return map;
+
+  const supabase = await createClient();
+  const nowISO = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("customer_phone, status")
+    .in("customer_phone", unique)
+    .lt("starts_at", nowISO);
+
+  if (error) {
+    console.error("getCustomerHistories:", error.message);
+    return map;
+  }
+
+  for (const row of (data ?? []) as { customer_phone: string; status: AppointmentStatus }[]) {
+    const h =
+      map.get(row.customer_phone) ?? { completed: 0, noShow: 0, cancelled: 0 };
+    if (row.status === "completed") h.completed++;
+    else if (row.status === "no_show") h.noShow++;
+    else if (row.status === "cancelled") h.cancelled++;
+    map.set(row.customer_phone, h);
+  }
+  return map;
+}
+
 /**
  * GEÇMİŞ randevular: başlangıcı şu andan önce olan TÜM kayıtlar (iptal ve
  * gelmeyenler dahil), en yeniden eskiye, sayfalı.
