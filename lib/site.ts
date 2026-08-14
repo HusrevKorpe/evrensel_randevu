@@ -9,7 +9,7 @@ export const siteConfig = {
     "Online randevunu saniyeler içinde al, sıra bekleme. Saç, sakal ve bakımda mahallenin güvenilir adresi.",
   // İletişim
   phone: "0507 121 36 55",
-  email: "randevu@berber.com",
+  email: "emredemiralay3202@gmail.com",
   address: "Kutlubey Mah. 1006. Sk. Eski Adliye Karşısı, Isparta",
   // Sosyal medya
   instagram: "https://instagram.com/evrenselkuafor",
