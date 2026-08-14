@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // nodemailer içeride dinamik require kullanır; paketlenirse bozulabilir.
+  // Sunucu tarafında node_modules'tan olduğu gibi çalışsın.
+  serverExternalPackages: ["nodemailer"],
   async headers() {
     return [
       // Tüm rotalar için temel güvenlik başlıkları.

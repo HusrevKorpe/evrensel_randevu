@@ -331,7 +331,7 @@ export async function sendPendingNags(): Promise<NagRunResult> {
           sent,
           failed,
           pending: rows.length,
-          error: "RESEND_API_KEY tanımlı değil — dürtmeler atlandı.",
+          error: "E-posta kanalı yapılandırılmamış — dürtmeler atlandı.",
         };
       }
     }

@@ -155,6 +155,34 @@ Müşteriye artık yalnızca **red/iptal** durumunda mail gider — diğer tüm 
 
 ---
 
+## 🗄️ Migration durumu (canlı DB)
+Migration'lar Supabase SQL Editor'a ELLE yapıştırılıyor, otomatik uygulanmıyor —
+bu yüzden "acaba çalıştırmış mıydık?" sorusu tekrar tekrar çıkıyor. Buraya yazalım.
+
+- [x] `0007_remove_anon_insert.sql` — **uygulanmış**, 2026-08-14'te `pg_policies` sorgusuyla
+      doğrulandı: `appointments` üzerinde tek politika `admin manage appointments (ALL,
+      authenticated)`, `anon` rolünde politika YOK → anon insert arka kapısı kapalı ✓
+
+**Hepsini tek sorguda kontrol etmek için** (Supabase > SQL Editor):
+```sql
+select
+  case when     exists (select 1 from information_schema.columns where table_schema='public'
+                        and table_name='barbers' and column_name='email')
+        and not exists (select 1 from information_schema.columns where table_schema='public'
+                        and table_name='appointments' and column_name='reminder_sent_at')
+       then '✅' else '❌' end as "0002+0003",
+  case when to_regclass('public.appointment_services') is not null then '✅' else '❌' end as "0006",
+  case when to_regclass('public.push_subscriptions')   is not null then '✅' else '❌' end as "0005",
+  case when exists (select 1 from information_schema.columns where table_schema='public'
+                    and table_name='appointments' and column_name='cancel_reason')
+       then '✅' else '❌' end as "0004",
+  case when not exists (select 1 from pg_policies where schemaname='public'
+                        and tablename='appointments' and policyname='public create appointment')
+       then '✅' else '❌' end as "0007";
+```
+
+---
+
 ## 🔗 Bağımlılık sırası
 `Faz 0 → Faz 1` zorunlu ilk ikili. Sonra `Faz 2` ve `Faz 3` paralel gidebilir ama
 randevu akışı (Faz 3) için Faz 1 şart. `Faz 4`, Faz 1+3'e bağlı. `Faz 5`, Faz 3'e bağlı.
