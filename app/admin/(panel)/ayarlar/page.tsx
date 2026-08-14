@@ -41,7 +41,7 @@ export default async function SettingsPage() {
       icon: Users,
       title: "Berberler",
       description:
-        "Bildirim e-postaları: yeni randevu talebi hangi adrese gitsin.",
+        "Usta ekle, düzenle, sırala; bildirim e-postalarını yönet.",
       summary: `${activeBarbers.length} berber · ${withEmail} e-posta tanımlı`,
     },
     {
