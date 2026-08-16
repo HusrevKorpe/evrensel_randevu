@@ -37,7 +37,7 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-              {siteConfig.slogan}. Randevunu online al, sıra bekleme.
+              Randevunu online al, sıra bekleme.
             </p>
           </div>
 

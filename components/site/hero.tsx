@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
 import { BookButton } from "@/components/site/book-button";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
@@ -33,11 +32,6 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-10%,color-mix(in_oklch,var(--brand)_16%,transparent),transparent)]" />
 
       <div className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:py-32">
-        <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-          <Star className="size-3.5 fill-brand text-brand" />
-          {siteConfig.slogan}
-        </span>
-
         <h1 className="font-heading text-4xl font-bold tracking-tight text-balance sm:text-6xl">
           Sıra beklemek yok.{" "}
           <span className="text-brand">Randevunu al</span>, gel.

@@ -93,7 +93,6 @@ function shell(title: string, bodyHtml: string): string {
   <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e6e2da;">
     <div style="padding:20px 24px;border-bottom:3px solid ${GOLD};">
       <span style="font-size:18px;font-weight:700;letter-spacing:0.5px;color:#1a1a1a;">${esc(siteConfig.name)}</span>
-      <span style="font-size:12px;color:#8a8a8a;"> · ${esc(siteConfig.slogan)}</span>
     </div>
     <div style="padding:24px;">
       <h1 style="margin:0 0 8px;font-size:18px;color:#1a1a1a;">${esc(title)}</h1>

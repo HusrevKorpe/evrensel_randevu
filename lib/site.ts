@@ -4,7 +4,6 @@
  */
 export const siteConfig = {
   name: "Evrensel Kuaför",
-  slogan: "Modern Erkek Kuaförü",
   description:
     "Online randevunu saniyeler içinde al, sıra bekleme. Saç, sakal ve bakımda mahallenin güvenilir adresi.",
   // İletişim

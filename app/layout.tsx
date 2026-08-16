@@ -24,12 +24,12 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} — ${siteConfig.slogan}`,
+    default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
   openGraph: {
-    title: `${siteConfig.name} — ${siteConfig.slogan}`,
+    title: siteConfig.name,
     description: siteConfig.description,
     type: "website",
     locale: "tr_TR",
