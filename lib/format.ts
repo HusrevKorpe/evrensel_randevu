@@ -59,6 +59,20 @@ export function telHref(phone: string): string {
   return `tel:${phone.replace(/[^\d+]/g, "")}`;
 }
 
+/**
+ * WhatsApp "hazır mesaj" linki: "+90 555 123 45 67" → wa.me/905551234567
+ *
+ * wa.me numarayı ülke koduyla ama + ve boşluk OLMADAN, düz rakam dizisi
+ * olarak ister. Link mobilde WhatsApp uygulamasını, masaüstünde WhatsApp
+ * Web'i açar ve `text` varsa mesajı yazı kutusuna doldurur — GÖNDERMEZ,
+ * gönder'e basmak (ve isterse metni düzenlemek) kullanıcıda kalır.
+ */
+export function waHref(phone: string, text?: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const base = `https://wa.me/${digits}`;
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+}
+
 /** Gün indeksi → ad. 0=Pazar ... 6=Cumartesi (Postgres dow ile uyumlu). */
 export const WEEKDAY_LABELS = [
   "Pazar",
