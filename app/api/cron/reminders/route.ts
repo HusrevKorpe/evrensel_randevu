@@ -2,7 +2,6 @@ import { after } from "next/server";
 import type { NextRequest } from "next/server";
 import { notifyTimedOut, sendPendingNags } from "@/lib/notifications/appointments";
 import { expirePendingAppointments } from "@/lib/booking/customer-status";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * BEKLEYEN RANDEVU BAKIMI — GET /api/cron/reminders
@@ -36,18 +35,6 @@ export async function GET(request: NextRequest) {
     return Response.json(
       { ok: false, error: "CRON_SECRET tanımlı değil." },
       { status: 500 },
-    );
-  }
-
-  // BAKIM MODU (bkz. proxy.ts): hiçbir randevuya dokunma, bildirim/mail atma.
-  // Sadece DB'ye ufak bir sorgu at ki ücretsiz Supabase uykuya dalmasın.
-  if (process.env.MAINTENANCE_MODE === "1") {
-    const { error } = await createAdminClient()
-      .from("working_hours")
-      .select("*", { count: "exact", head: true });
-    return Response.json(
-      { ok: !error, maintenance: true },
-      { status: error ? 500 : 200 },
     );
   }
 
