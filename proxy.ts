@@ -3,16 +3,31 @@ import { updateSession } from "@/lib/auth/session";
 
 /**
  * PROXY (eski adıyla "middleware" — Next 16'da yeniden adlandırıldı).
- * Her `/admin` isteğinden ÖNCE çalışır: Supabase oturumunu tazeler ve
- * giriş yapmamış ziyaretçiyi giriş sayfasına yönlendirir.
  *
- * Sadece `/admin` altında çalışsın diye `matcher` ile sınırladık —
- * vitrin (anasayfa, /randevu) bundan hiç etkilenmez, hızlı kalır.
+ * 1. BAKIM MODU: Vercel'de `MAINTENANCE_MODE=1` ise site tamamen kapanır,
+ *    her sayfa düz "Error" (503) döner. Sadece günlük cron açık kalır ki
+ *    Supabase ücretsiz planda uykuya dalmasın. Açmak için değişkeni silip
+ *    yeniden deploy etmek yeterli.
+ * 2. `/admin` isteklerinde Supabase oturumunu tazeler ve giriş yapmamış
+ *    ziyaretçiyi giriş sayfasına yönlendirir.
  */
 export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+  const { pathname } = request.nextUrl;
+
+  if (process.env.MAINTENANCE_MODE === "1" && !pathname.startsWith("/api/cron")) {
+    return new Response("Error", {
+      status: 503,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return await updateSession(request);
+  }
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  // Bakım modu her sayfayı kapsasın diye tüm yollar; Next'in kendi statik
+  // dosyaları hariç.
+  matcher: ["/((?!_next/static|_next/image).*)"],
 };
